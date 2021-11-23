@@ -8,3 +8,9 @@
 ><br /><br /> In the last step, just run <strong>cordova emulate android</strong>, your application will show in emulator. 
 ><br /><br /> Preview of the App like below 
 ![Preview of App](www/img/Cordova.png)
+
+  <description>
+        Sofit in an Apache Cordova container.
+    <author email="contact@tesobe.com" href="http://www.tesobe.com">
+        TESOBE GmbH / Open Bank Project
+    </author>
