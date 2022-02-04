@@ -327,7 +327,7 @@ function openSofit(correlated_user_id) {
 <p id="check">Check</p>
 var check = document.getElementById("check")
 check.innerHTML="This is wroking till" +JSON.stringify(JSON.parse(response.data)) ;
-//function makeObpApiPostrequest :: use cordova plugin like contact level and show a msg.
+//function makeObpApiPostrequest ::
 //get data, which store and depend on other things, it is call WSE
 
 
