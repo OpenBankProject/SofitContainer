@@ -35,14 +35,14 @@
     /** For each event handler registered after the deviceready event fires has its callback function called immediately. */
     function onDeviceReady() {
       getDirectLoginTokenWSE()
-      openSofit()
+      openSofit(correlated_user_id)
     }
 
     /**  - This function retrieves the direct login token from local storage, as well as checks whether the token is valid or not?
                    - As well as, get a date_token_generated from local storage and try to compare the expiry date of the token, if it will expire soon, then will generate token before expire.*/
     function getDirectLoginTokenWSE() {
       /** param {[string]} correlated_user_id: This id will get from the local storage */
-      let date_token_generated = window.localStorage.getItem(' date_token_generated')
+      let date_token_generated = window.localStorage.getItem('date_token_generated')
       let tokenDuration = date_token_generated + token_life
       let today_date = new Date().getTime()
       if (localDirectLoginTokenIsValid() && tokenDuration < today_date) {
@@ -132,7 +132,7 @@
               let time = new Date().getTime()
               correlated_user_id = user_data.user_id
               window.localStorage.setItem('correlated_user_id', correlated_user_id)
-              window.localStorage.setItem(' date_token_generated', time)
+              window.localStorage.setItem('date_token_generated', time)
             }
             resolve(createUserOptions.data)
           },
@@ -140,7 +140,7 @@
       })
     }
 
-    /** The token is stroed in local memory after generation. */
+    /** The token is stored in local memory after generation. */
     function storeNewDirectLoginTokenWSE(token) {
       var storage = window.localStorage
       storage.setItem('direct_login_token', token)
@@ -148,7 +148,7 @@
     }
 
     /** This is used for the creation of a new token. */
-    function generatedToken(username, password) {
+    function createAndStoreNewToken(username, password) {
       cordova.plugin.http.setDataSerializer('json')
       //Set the header parameter for the post request.
       //update value in direct login
@@ -169,6 +169,6 @@
     }
 
     /** This function is used to open the Sofit App with user ID. */
-    function openSofit() {
-      window.open = cordova.InAppBrowser.open(`${SOFIT_HOST}?correlated_user_id = ${correlated_user_id}`, '_blank', 'location=no')
+    function openSofit(user_id) {
+      window.open = cordova.InAppBrowser.open(`${SOFIT_HOST}?correlated_user_id = ${user_id}`, '_blank', 'location=no')
     }
