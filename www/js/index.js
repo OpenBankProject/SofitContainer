@@ -203,6 +203,9 @@ function storeNewDirectLoginTokenWSE(token) {
 /** This is used for the creation of a new token. */
 function createAndStoreNewToken(username, password) {
     setDebugInfo("Hello from createAndStoreNewToken")
+    setDebugInfo("username is: " + username)
+    setDebugInfo("password is: " + password)
+
     cordova.plugin.http.setDataSerializer('json')
     //Set the header parameter for the post request.
     //update value in direct login
