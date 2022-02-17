@@ -30,47 +30,56 @@ const SOFIT_HOST = 'https://includimi-sofit.tesobe.com'
 const OBP_API_HOST = 'https://includimi.tesobe.com'
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000
-
+function setDebugInfo(text) {
+   debugInfo= document.getElementById("debugInfo")
+   debugInfo.innerHTML =  debugInfo.innerHTML + " --- " + text;
+}
 
 /** For each event handler registered after the deviceready event fires has its callback function called immediately. */
 function onDeviceReady() {
+    setDebugInfo("Hello from onDeviceReady ")
     //let correlated_username = window.localStorage.getItem('username')
     //let correlated_password = window.localStorage.getItem('password')
     //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
     if (directLoginTokenExistsLocally() && directLoginTokenIsFresh() && localDirectLoginTokenIsValid()) {
         // No need to get Direct Login Token.
+        setDebugInfo("All good")
     } else {
-        if (correlatedUserExistsLocally(getCorrelatedUserName(), getCorrelatedPassword(), getCorrelatedUserId()) {
+        setDebugInfo("no token")
+        if (correlatedUserExistsLocally(getCorrelatedUserName(), getCorrelatedPassword(), getCorrelatedUserId())) {
             // No need to create User
             // Just create a new Token. (In the future we can also check if the User is valid i.e. not locked etc.)
+            setDebugInfo("before createAndStoreNewToken")
             createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword())
+            setDebugInfo("after createAndStoreNewToken")
         } else {
             //do not need populate the variable
+
             if (createNewUser()) {
+                setDebugInfo("before createAndStoreNewToken ")
                 // if user_id does not exist in local storage that means user has not register or new user then call function create new user().
                 createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword())
+                setDebugInfo("after createAndStoreNewToken")
             } else {
                 return 'error'
             }
             //check properly
         }
     }
-    openSofit(correlated_user_id)
+    openSofit(getCorrelatedUserId())
 }
 
 function getCorrelatedUserName(){
-    return window.localStorage.getItem('correlated_username'){
-    }
+    return window.localStorage.getItem('correlated_username')
 }
+
 function getCorrelatedPassword(){
-    return window.localStorage.getItem('correlated_password'){
-    }
+    return window.localStorage.getItem('correlated_password')
 }
 function getCorrelatedUserId(){
-    return window.localStorage.getItem('correlated_user_id'){
-    }
+    return window.localStorage.getItem('correlated_user_id')
 }
-//
+
 /** This function will check the validity of the token.
            - It will return  boolean value - if token tokenDuration is less than token date, then it will return true. */
 function directLoginTokenIsFresh() {
@@ -179,6 +188,8 @@ async function createNewUser() {
     })
     if (res) {
         return true
+    }else{
+    return false
     }
 }
 
@@ -191,6 +202,7 @@ function storeNewDirectLoginTokenWSE(token) {
 
 /** This is used for the creation of a new token. */
 function createAndStoreNewToken(username, password) {
+    setDebugInfo("Hello from createAndStoreNewToken")
     cordova.plugin.http.setDataSerializer('json')
     //Set the header parameter for the post request.
     //update value in direct login
@@ -200,6 +212,7 @@ function createAndStoreNewToken(username, password) {
     )
     cordova.plugin.http.setHeader('Content-Type', 'application/json ')
     //Create the post request, leave the body and header section empty as it was defined above.
+    setDebugInfo("Before post in createAndStoreNewToken")
     cordova.plugin.http.post(
         `${OBP_API_HOST}/my/logins/direct`, {}, {},
         function(response) {
@@ -208,6 +221,7 @@ function createAndStoreNewToken(username, password) {
             return storeNewDirectLoginToken(res.token)
         },
     )
+    setDebugInfo("Bye from createAndStoreNewToken")
 }
 
 /** This function is used to open the Sofit App with user ID. */
