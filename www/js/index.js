@@ -91,9 +91,15 @@ function directLoginTokenIsFresh() {
 
 /** This function will check, User weather stored in exists in local storage or not with defined parameters. */
 function correlatedUserExistsLocally(username, password, correlated_user_id) {
+    setDebugInfo("Hello from correlatedUserExistsLocally")
+    setDebugInfo("Username:" + username)
+    setDebugInfo("password:" + password)
+    setDebugInfo("correlated_user_id:" + correlated_user_id)
     if (username && password && correlated_user_id) {
+        setDebugInfo("correlatedUserExistsLocally will return true")
         return true
     } else {
+        setDebugInfo("correlatedUserExistsLocally will return false")
         return false
     }
 }
