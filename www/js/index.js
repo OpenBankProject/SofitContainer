@@ -67,26 +67,33 @@ function onDeviceReady() {
         }
     }
     openSofit(getCorrelatedUserId())
+    setDebugInfo("bye from onDeviceReady ")
 }
 
 function getCorrelatedUserName(){
+    setDebugInfo("Hello from getCorrelatedUserName")
     return window.localStorage.getItem('correlated_username')
 }
 
 function getCorrelatedPassword(){
+    setDebugInfo("Hello from getCorrelatedPassword")
     return window.localStorage.getItem('correlated_password')
 }
 function getCorrelatedUserId(){
+    setDebugInfo("Hello from getCorrelatedUserId")
     return window.localStorage.getItem('correlated_user_id')
 }
 
 /** This function will check the validity of the token.
            - It will return  boolean value - if token tokenDuration is less than token date, then it will return true. */
 function directLoginTokenIsFresh() {
+    setDebugInfo("Hello from directLoginTokenIsFresh")
     let date_token_generated = window.localStorage.getItem('date_token_generated')
     let tokenDuration = date_token_generated + token_life
     let today_date = new Date().getTime()
     return tokenDuration < today_date
+    setDebugInfo("Bye from directLoginTokenIsFresh")
+
 }
 
 /** This function will check, User weather stored in exists in local storage or not with defined parameters. */
@@ -110,6 +117,7 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
                       -Generation of the token by an invalid user.
                 2. If the token is valid, call the API to get the current login user. */
 function localDirectLoginTokenIsValid() {
+setDebugInfo("Hello from localDirectLoginTokenIsValid")
     if (directLoginTokenExistsLocally()) {
         cordova.plugin.http.setDataSerializer('json')
         //Set the Header parameter for the Post request
@@ -124,16 +132,20 @@ function localDirectLoginTokenIsValid() {
         cordova.plugin.http.get(
             `${OBP_API_HOST}/obp/v4.0.0/users/current`, {}, {},
             function(response) {
+                setDebugInfo("directLoginTokenExistsLocally will return true")
                 return true
             },
         )
     } else {
+        setDebugInfo("localDirectLoginTokenIsValid will return false")
         return false
     }
+    setDebugInfo("Bye from localDirectLoginTokenIsValid")
 }
 
 /** This function checks whether the token is exists in local local storage or not. If the token is present, the endpoint is called and the current login user is returned. */
 function directLoginTokenExistsLocally() {
+    setDebugInfo("Hello from directLoginTokenExistsLocally")
     if (window.localStorage['direct_login_token']) {
         return true
     } else {
@@ -144,12 +156,14 @@ function directLoginTokenExistsLocally() {
 /** Call the function to create a new token.
           1. call the API and return the direct login token. */
 function createNewDirectLoginToken() {
+    setDebugInfo("Hello from createNewDirectLoginToken")
     createNewUser()
 }
 
 /** This function creates a new user.
  * @param {[object]} json Set the http request type json. */
 async function createNewUser() {
+    setDebugInfo("Hello from createNewUser")
     const res = await new Promise((resolve, reject) => {
         cordova.plugin.http.setDataSerializer('json')
         // get unique id to create user : uuid
@@ -166,6 +180,7 @@ async function createNewUser() {
         }
 
         // creating user info based on the uuid
+        setDebugInfo("Before create createUserOptions")
         const createUserOptions = {
             method: 'post',
             data: {
@@ -197,13 +212,17 @@ async function createNewUser() {
     }else{
     return false
     }
+    setDebugInfo("Bye from createNewUser")
+
 }
 
 /** The token is stored in local memory after generation. */
 function storeNewDirectLoginTokenWSE(token) {
+    setDebugInfo("Hello from storeNewDirectLoginTokenWSE")
     var storage = window.localStorage
     storage.setItem('direct_login_token', token)
     return token
+    setDebugInfo("Hello bye storeNewDirectLoginTokenWSE")
 }
 
 /** This is used for the creation of a new token. */
@@ -221,10 +240,11 @@ function createAndStoreNewToken(username, password) {
     )
     cordova.plugin.http.setHeader('Content-Type', 'application/json ')
     //Create the post request, leave the body and header section empty as it was defined above.
-    setDebugInfo("Before post in createAndStoreNewToken")
+    setDebugInfo("Before call directlogin API in createAndStoreNewToken")
     cordova.plugin.http.post(
         `${OBP_API_HOST}/my/logins/direct`, {}, {},
         function(response) {
+            setDebugInfo("After call directlogin API in createAndStoreNewToken")
             //Convert JSON object to text format
             const res = JSON.parse(response.data)
             return storeNewDirectLoginToken(res.token)
@@ -235,9 +255,11 @@ function createAndStoreNewToken(username, password) {
 
 /** This function is used to open the Sofit App with user ID. */
 function openSofit(user_id) {
+    setDebugInfo("Hello from openSofit")
     window.open = cordova.InAppBrowser.open(
         `${SOFIT_HOST}?correlated_user_id = ${user_id}`,
         '_blank',
         'location=no',
     )
+    setDebugInfo("Bye from openSofit")
 }
