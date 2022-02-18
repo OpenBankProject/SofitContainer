@@ -191,26 +191,32 @@ async function createNewUser() {
                 last_name: uuid_string,
             },
         }
+        setDebugInfo("Before send request")
         cordova.plugin.http.sendRequest(
             `${OBP_API_HOST}/obp/v4.0.0/users`,
             createUserOptions,
             function(response) {
                 // Successful user creation
                 if (response.status == 201) {
+                    setDebugInfo("Status is 201")
                     let user_data = JSON.parse(response.body)
                     window.localStorage.setItem('correlated_user_id', user_data.user_id)
                     window.localStorage.setItem('correlated_username', user_data.username)
                     window.localStorage.setItem('correlated_password', user_data.password)
                     window.localStorage.setItem('date_token_generated', new Date().getTime())
+                } else {
+                    setDebugInfo("Status is : ", + response.status)
                 }
                 resolve(createUserOptions.data)
             },
         )
     })
     if (res) {
+        setDebugInfo("createNewUser will return true")
         return true
-    }else{
-    return false
+    } else {
+        setDebugInfo("createNewUser will return false")
+        return false
     }
     setDebugInfo("Bye from createNewUser")
 
