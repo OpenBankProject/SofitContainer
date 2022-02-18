@@ -30,9 +30,10 @@ const SOFIT_HOST = 'https://includimi-sofit.tesobe.com'
 const OBP_API_HOST = 'https://includimi.tesobe.com'
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000
+
 function setDebugInfo(text) {
-   debugInfo= document.getElementById("debugInfo")
-   debugInfo.innerHTML =  debugInfo.innerHTML + " --- " + text;
+    debugInfo = document.getElementById("debugInfo")
+    debugInfo.innerHTML = debugInfo.innerHTML + " --- " + text;
 }
 
 /** For each event handler registered after the deviceready event fires has its callback function called immediately. */
@@ -66,20 +67,21 @@ function onDeviceReady() {
             //check properly
         }
     }
-    openSofit(getCorrelatedUserId())
+    //openSofit(getCorrelatedUserId())
     setDebugInfo("bye from onDeviceReady ")
 }
 
-function getCorrelatedUserName(){
+function getCorrelatedUserName() {
     setDebugInfo("Hello from getCorrelatedUserName")
     return window.localStorage.getItem('correlated_username')
 }
 
-function getCorrelatedPassword(){
+function getCorrelatedPassword() {
     setDebugInfo("Hello from getCorrelatedPassword")
     return window.localStorage.getItem('correlated_password')
 }
-function getCorrelatedUserId(){
+
+function getCorrelatedUserId() {
     setDebugInfo("Hello from getCorrelatedUserId")
     return window.localStorage.getItem('correlated_user_id')
 }
@@ -117,7 +119,7 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
                       -Generation of the token by an invalid user.
                 2. If the token is valid, call the API to get the current login user. */
 function localDirectLoginTokenIsValid() {
-setDebugInfo("Hello from localDirectLoginTokenIsValid")
+    setDebugInfo("Hello from localDirectLoginTokenIsValid")
     if (directLoginTokenExistsLocally()) {
         cordova.plugin.http.setDataSerializer('json')
         //Set the Header parameter for the Post request
@@ -167,7 +169,7 @@ async function createNewUser() {
     const res = await new Promise((resolve, reject) => {
         cordova.plugin.http.setDataSerializer('json')
         // get unique id to create user : uuid
-        const uuid_string = device.uuid
+        const uuid_string = device.uuid + "Simon"
         // These lines of code will generate a dynamic password with long string.
         var randomLongStringPassword = ''
         var characters =
@@ -191,6 +193,7 @@ async function createNewUser() {
                 last_name: uuid_string,
             },
         }
+        // Creating a user, token, if user already exists:
         setDebugInfo("Before send request")
         cordova.plugin.http.sendRequest(
             `${OBP_API_HOST}/obp/v4.0.0/users`,
@@ -204,11 +207,16 @@ async function createNewUser() {
                     window.localStorage.setItem('correlated_username', user_data.username)
                     window.localStorage.setItem('correlated_password', user_data.password)
                     window.localStorage.setItem('date_token_generated', new Date().getTime())
+                    resolve(createUserOptions.data)
                 } else {
+                    reject(createUserOptions.data)
                     setDebugInfo("Status is : ", + response.status)
                 }
-                resolve(createUserOptions.data)
+
             },
+            function(response) {
+                setDebugInfo("Error in createNewUser", + response.code)
+            }
         )
     })
     if (res) {
@@ -255,6 +263,9 @@ function createAndStoreNewToken(username, password) {
             const res = JSON.parse(response.data)
             return storeNewDirectLoginToken(res.token)
         },
+        function(response) {
+            setDebugInfo("Error in createAndStoreNewToken", +response.code)
+        }
     )
     setDebugInfo("Bye from createAndStoreNewToken")
 }
