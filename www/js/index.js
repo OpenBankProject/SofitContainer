@@ -68,6 +68,9 @@ function onDeviceReady() {
         }
     }
     //openSofit(getCorrelatedUserId())
+    setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName())
+    setDebugInfo("getCorrelatedPassword is: " + getCorrelatedPassword())
+    setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId())
     setDebugInfo("bye from onDeviceReady ")
 }
 
@@ -166,34 +169,35 @@ function createNewDirectLoginToken() {
  * @param {[object]} json Set the http request type json. */
 async function createNewUser() {
     setDebugInfo("Hello from createNewUser")
+     // get unique id to create user : uuid
+     const uuid_string = device.uuid + "Simon"
+            // These lines of code will generate a dynamic password with long string.
+            var randomLongStringPassword = ''
+            var characters =
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+            var charactersLength = characters.length
+            for (var i = 0; i < 20; i++) {
+                randomLongStringPassword += characters.charAt(
+                    Math.floor(Math.random() * charactersLength),
+                )
+            }
+
+            window.localStorage.setItem('correlated_username', username)
+            window.localStorage.setItem('correlated_password', randomLongStringPassword)
+            const createUserOptions = {
+                        method: 'post',
+                        data: {
+                            email: uuid_string + '@example.com',
+                            username: uuid_string,
+                            password: randomLongStringPassword,
+                            first_name: uuid_string,
+                            last_name: uuid_string,
+                        },
+                    }
     const res = await new Promise((resolve, reject) => {
         cordova.plugin.http.setDataSerializer('json')
-        // get unique id to create user : uuid
-        const uuid_string = device.uuid + "Simon"
-        // These lines of code will generate a dynamic password with long string.
-        var randomLongStringPassword = ''
-        var characters =
-            'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-        var charactersLength = characters.length
-        for (var i = 0; i < 20; i++) {
-            randomLongStringPassword += characters.charAt(
-                Math.floor(Math.random() * charactersLength),
-            )
-        }
-
         // creating user info based on the uuid
         setDebugInfo("Before create createUserOptions")
-        const createUserOptions = {
-            method: 'post',
-            data: {
-                email: uuid_string + '@example.com',
-                username: uuid_string,
-                password: randomLongStringPassword,
-                first_name: uuid_string,
-                last_name: uuid_string,
-            },
-        }
-        // Creating a user, token, if user already exists:
         setDebugInfo("Before send request")
         cordova.plugin.http.sendRequest(
             `${OBP_API_HOST}/obp/v4.0.0/users`,
@@ -204,9 +208,6 @@ async function createNewUser() {
                     setDebugInfo("Status is 201")
                     let user_data = JSON.parse(response.body)
                     window.localStorage.setItem('correlated_user_id', user_data.user_id)
-                    window.localStorage.setItem('correlated_username', user_data.username)
-                    window.localStorage.setItem('correlated_password', user_data.password)
-                    window.localStorage.setItem('date_token_generated', new Date().getTime())
                     resolve(createUserOptions.data)
                 } else {
                     reject(createUserOptions.data)
@@ -235,6 +236,7 @@ function storeNewDirectLoginTokenWSE(token) {
     setDebugInfo("Hello from storeNewDirectLoginTokenWSE")
     var storage = window.localStorage
     storage.setItem('direct_login_token', token)
+    storage.setItem('date_token_saved', new Date().getTime())
     return token
     setDebugInfo("Hello bye storeNewDirectLoginTokenWSE")
 }
