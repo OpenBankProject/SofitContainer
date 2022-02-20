@@ -1,0 +1,39 @@
+{
+  "name": "com.example.hello",
+  "displayName": "SofitCOntainer",
+  "version": "1.0.0",
+  "description": "A sample Apache Cordova application that responds to the deviceready event.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ecosystem:cordova"
+  ],
+  "author": "Apache Cordova Team",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "cordova-android": "^10.1.1",
+    "cordova-browser": "^6.0.0",
+    "cordova-plugin-advanced-http": "^3.2.2",
+    "cordova-plugin-device": "^2.0.3",
+    "cordova-plugin-dialogs": "^2.0.2",
+    "cordova-plugin-file": "^6.0.2",
+    "cordova-plugin-inappbrowser": "^5.0.0"
+  },
+  "cordova": {
+    "platforms": [
+      "android",
+      "browser"
+    ],
+    "plugins": {
+      "cordova-plugin-inappbrowser": {},
+      "cordova-plugin-advanced-http": {
+        "ANDROIDBLACKLISTSECURESOCKETPROTOCOLS": "SSLv3,TLSv1"
+      },
+      "cordova-plugin-device": {},
+      "cordova-plugin-dialogs": {},
+      "cordova-plugin-file": {}
+    }
+  }
+}
