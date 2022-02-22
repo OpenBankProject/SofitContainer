@@ -38,7 +38,7 @@ function setDebugInfo(text) {
 
 /** For each event handler registered after the deviceready event fires has its callback function called immediately. */
 async function onDeviceReady() {
-  setDebugInfo('Hello from onDeviceReady ')
+  setDebugInfo('Hello from onDeviceReady')
   //let correlated_username = window.localStorage.getItem('username')
   //let correlated_password = window.localStorage.getItem('password')
   //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
@@ -74,6 +74,9 @@ async function onDeviceReady() {
       //check properly
     }
   }
+
+  /// what should i pass here as should send key
+  postUserAttribute("DEVICE_CONTACT_COUNT", getDeviceContactsCount(), "INTEGER")
   //openSofit(getCorrelatedUserId())
   setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
   setDebugInfo('getCorrelatedPassword is: ' + getCorrelatedPassword())
@@ -115,10 +118,13 @@ function directLoginTokenIsFresh() {
 
 /** This function will check, User weather stored in exists in local storage or not with defined parameters. */
 function correlatedUserExistsLocally(username, password, correlated_user_id) {
+  username = window.localStorage.getItem('correlated_username')
+  password = window.localStorage.getItem('correlated_password')
+  correlated_user_id = window.localStorage.getItem('correlated_user_id')
   setDebugInfo('Hello from correlatedUserExistsLocally')
-  setDebugInfo('Username:' + username)
-  setDebugInfo('password:' + password)
-  setDebugInfo('correlated_user_id:' + correlated_user_id)
+  setDebugInfo('Username: ' + username)
+  setDebugInfo('password: ' + password)
+  setDebugInfo('correlated_user_id: ' + correlated_user_id)
   if (username && password && correlated_user_id) {
     setDebugInfo('correlatedUserExistsLocally will return true')
     return true
@@ -150,6 +156,7 @@ async function localDirectLoginTokenIsValid() {
       {},
       {},
       function (response) {
+
         setDebugInfo('directLoginTokenExistsLocally will return true')
         resolve(true)
       },
@@ -157,7 +164,7 @@ async function localDirectLoginTokenIsValid() {
         for (const key in response) {
           setDebugInfo(key + response[key])
         }
-        setDebugInfo('directLoginTokenExistsLocally will return true')
+        setDebugInfo('directLoginTokenExistsLocally will return false')
         resolve(false)
       },
     )
@@ -199,8 +206,8 @@ async function createNewUser() {
     )
   }
   const username = uuid_string
-  setDebugInfo('Username' + username)
-  setDebugInfo('password' + randomLongStringPassword)
+  setDebugInfo('Username: ' + username)
+  setDebugInfo('password: ' + randomLongStringPassword)
   window.localStorage.setItem('correlated_username', username)
   window.localStorage.setItem('correlated_password', randomLongStringPassword)
   const createUserOptions = {
@@ -230,12 +237,12 @@ async function createNewUser() {
           resolve(true)
         } else {
           resolve(false)
-          setDebugInfo('Status is : ', +response.status)
+          setDebugInfo('Status is : ', + response.status)
         }
       },
       function (response) {
         resolve(false)
-        setDebugInfo('Error in createNewUser', +response.code)
+        setDebugInfo('Error in createNewUser', + response.code)
       },
     )
   })
@@ -243,13 +250,13 @@ async function createNewUser() {
 }
 
 /** The token is stored in local memory after generation. */
-function storeNewDirectLoginTokenWSE(token) {
-  setDebugInfo('Hello from storeNewDirectLoginTokenWSE')
+function storeNewDirectLoginToken(token) {
+  setDebugInfo('Hello from storeNewDirectLoginToken')
   var storage = window.localStorage
   storage.setItem('direct_login_token', token)
   storage.setItem('date_token_saved', new Date().getTime())
   return token
-  setDebugInfo('Hello bye storeNewDirectLoginTokenWSE')
+  setDebugInfo('Hello bye storeNewDirectLoginToken')
 }
 
 /** This is used for the creation of a new token. */
@@ -282,19 +289,60 @@ async function createAndStoreNewToken(username, password) {
       function (response) {
         setDebugInfo('After call directlogin API in createAndStoreNewToken')
         //Convert JSON object to text format
-        const res = JSON.parse(response.data)
-        storeNewDirectLoginTokenWSE(res.token)
+        let res = JSON.parse(response.data)
+        storeNewDirectLoginToken(res.token)
         resolve(true)
       },
       function (response) {
         resolve(false)
-        setDebugInfo('Error in createAndStoreNewToken', +response.code)
+        setDebugInfo('Error in createAndStoreNewToken', + response.code)
       },
     )
   })
 
   setDebugInfo('Bye from createAndStoreNewToken')
 }
+// use of this function 100 time, track user activity, it should be bettry level
+//Contact
+function postUserAttribute(key, value, type){
+setDebugInfo("Hello from postUserAttribute")
+cordova.plugin.http.setDataSerializer('json')
+  //Set the Header parameter for the Post request
+  cordova.plugin.http.setHeader(
+    'Authorization',
+    `DirectLogin token="${window.localStorage.getItem('direct_login_token')}"`,
+  )
+  cordova.plugin.http.setHeader('Content-Type', 'application/json ')
+
+  //Post request create, leave body and header section empty because defined above
+
+    cordova.plugin.http.post(
+      `${OBP_API_HOST}/obp/v4.0.0/my/user/attributes`,
+      //TYPE WILL BE type and value will be actuall value
+        //// where, i can get the value : it should be dynamic or static :: when i call the function where do i parameters will pass
+        //
+      {"name":key,  "type":type,  "value":value},
+      {},
+      function (response) {
+        setDebugInfo(response.status)
+        setDebugInfo('postUserAttribute will return true')
+        return response
+      },
+      function (response) {
+        setDebugInfo('postUserAttribute will return false' + JSON.stringify(response))
+      },
+    )
+}
+/// Should return number of contacts in the interger in phone
+function getDeviceContactsCount(){
+    setDebugInfo("Hello from getDeviceContact")
+    navigator.contactsPhoneNumbers.list(function(contacts) {
+    		total_count = contacts.length
+    		return total_count
+       }, function(error) {
+          console.error(error);
+       });
+    }
 
 /** This function is used to open the Sofit App with user ID. */
 function openSofit(user_id) {
