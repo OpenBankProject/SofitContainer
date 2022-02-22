@@ -76,7 +76,7 @@ async function onDeviceReady() {
   }
 
   /// what should i pass here as should send key
-  postUserAttribute("DEVICE_CONTACT_COUNT", getDeviceContactsCount(), "INTEGER")
+  postUserAttribute("DEVICE_CONTACT_COUNT", "INTEGER", getDeviceContactsCount())
   //openSofit(getCorrelatedUserId())
   setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
   setDebugInfo('getCorrelatedPassword is: ' + getCorrelatedPassword())
@@ -304,8 +304,9 @@ async function createAndStoreNewToken(username, password) {
 }
 // use of this function 100 time, track user activity, it should be bettry level
 //Contact
-function postUserAttribute(key, value, type){
+function postUserAttribute(key, type, value){
 setDebugInfo("Hello from postUserAttribute")
+setDebugInfo(`Value from parameters ${key}, ${type}, ${value} `)
 cordova.plugin.http.setDataSerializer('json')
   //Set the Header parameter for the Post request
   cordova.plugin.http.setHeader(
@@ -320,7 +321,7 @@ cordova.plugin.http.setDataSerializer('json')
       `${OBP_API_HOST}/obp/v4.0.0/my/user/attributes`,
       //TYPE WILL BE type and value will be actuall value
         //// where, i can get the value : it should be dynamic or static :: when i call the function where do i parameters will pass
-        //
+       //{ "name":"BATTERY_LEVEL",  "type":"INTEGER",  "value":"80"}
       {"name":key,  "type":type,  "value":value},
       {},
       function (response) {
@@ -336,12 +337,16 @@ cordova.plugin.http.setDataSerializer('json')
 /// Should return number of contacts in the interger in phone
 function getDeviceContactsCount(){
     setDebugInfo("Hello from getDeviceContact")
+    let total_count = 0
     navigator.contactsPhoneNumbers.list(function(contacts) {
     		total_count = contacts.length
-    		return total_count
+    		setDebugInfo("Return total number of Contact: " + total_count)
+    		//return total_count
        }, function(error) {
           console.error(error);
        });
+       return total_count
+       setDebugInfo("Contact list is: " + total_count)
     }
 
 /** This function is used to open the Sofit App with user ID. */
