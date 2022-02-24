@@ -31,6 +31,7 @@ const OBP_API_HOST = 'https://includimi.tesobe.com'
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000
 
+/** This is a defub function, for finding error. */
 function setDebugInfo(text) {
   debugInfo = document.getElementById('debugInfo')
   debugInfo.innerHTML = debugInfo.innerHTML + ' --- ' + text + '<br />'
@@ -42,7 +43,6 @@ async function onDeviceReady() {
   //let correlated_username = window.localStorage.getItem('username')
   //let correlated_password = window.localStorage.getItem('password')
   //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
-
   if (
     directLoginTokenExistsLocally() &&
     directLoginTokenIsFresh() &&
@@ -61,35 +61,36 @@ async function onDeviceReady() {
     ) {
       // No need to create User
       // Just create a new Token. (In the future we can also check if the User is valid i.e. not locked etc.)
-      setDebugInfo('before createAndStoreNewToken')
+      setDebugInfo('Before createAndStoreNewToken')
       createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword())
-      setDebugInfo('after createAndStoreNewToken')
+      setDebugInfo('After createAndStoreNewToken')
     } else {
       //do not need populate the variable
-
       if (await createNewUser()) {
-        setDebugInfo('before createAndStoreNewToken ')
+        setDebugInfo('Before createAndStoreNewToken ')
         // if user_id does not exist in local storage that means user has not register or new user then call function create new user().
         await createAndStoreNewToken(
           getCorrelatedUserName(),
           getCorrelatedPassword(),
         )
-        setDebugInfo('after createAndStoreNewToken')
+        setDebugInfo('After createAndStoreNewToken')
       } else {
         return 'error'
       }
-      //check properly
     }
   }
 
-  /// what should i pass here as should send key
   postUserAttribute(
     'DEVICE_CONTACT_COUNT',
     'INTEGER',
-    //if getDeviceContactsCount return is false what will be happen in postUserAttribute
     await getDeviceContactsCount(),
   )
-  openSofit(getCorrelatedUserId())
+  postUserAttribute(
+    'DEVICE_BATTERY_LEVEL',
+    'INTEGER',
+    await getDeviceBatteryLevel(),
+  )
+  //openSofit(getCorrelatedUserId())
   setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
   setDebugInfo('getCorrelatedPassword is: ' + getCorrelatedPassword())
   setDebugInfo('getCorrelatedUserId is: ' + getCorrelatedUserId())
@@ -146,6 +147,14 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
   }
 }
 
+//Set the Header parameter for the Post request
+function directLoginTokenHeader(){
+    cordova.plugin.http.setHeader(
+        'Authorization',
+        `DirectLogin token="${window.localStorage.getItem('direct_login_token')}"`,
+      )
+      cordova.plugin.http.setHeader('Content-Type', 'application/json ')
+}
 /** This function checks if the token is valid or not.
           GUARD: 1.  Two options are available for checking the token validation.
                       -The token should be present or expired in the local storage.
@@ -154,13 +163,7 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
 async function localDirectLoginTokenIsValid() {
   setDebugInfo('Hello from localDirectLoginTokenIsValid')
   cordova.plugin.http.setDataSerializer('json')
-  //Set the Header parameter for the Post request
-  cordova.plugin.http.setHeader(
-    'Authorization',
-    `DirectLogin token="${window.localStorage.getItem('direct_login_token')}"`,
-  )
-  cordova.plugin.http.setHeader('Content-Type', 'application/json ')
-
+  directLoginTokenHeader()
   //Post request create, leave body and header section empty because defined above
   return new Promise((resolve) => {
     cordova.plugin.http.get(
@@ -183,7 +186,7 @@ async function localDirectLoginTokenIsValid() {
   setDebugInfo('Bye from localDirectLoginTokenIsValid')
 }
 
-/** This function checks whether the token is exists in local local storage or not. If the token is present, the endpoint is called and the current login user is returned. */
+/** This function checks whether the token is exists in local local storage or not. */
 function directLoginTokenExistsLocally() {
   setDebugInfo('Hello from directLoginTokenExistsLocally')
   if (window.localStorage['direct_login_token']) {
@@ -313,24 +316,22 @@ async function createAndStoreNewToken(username, password) {
   setDebugInfo('Bye from createAndStoreNewToken')
 }
 
+
 function postUserAttribute(key, type, value) {
   setDebugInfo('Hello from postUserAttribute')
   setDebugInfo(`Value from parameters ${key}, ${type}, ${value}`)
   cordova.plugin.http.setDataSerializer('json')
   //Set the Header parameter for the Post request
-  cordova.plugin.http.setHeader(
-    'Authorization',
-    `DirectLogin token="${window.localStorage.getItem('direct_login_token')}"`,
-  )
-  cordova.plugin.http.setHeader('Content-Type', 'application/json ')
+  directLoginTokenHeader()
   cordova.plugin.http.post(
     `${OBP_API_HOST}/obp/v4.0.0/my/user/attributes`,
     { name: key, type: type, value: value },
     {},
     function (response) {
       //This is a successful response
-      setDebugInfo(response.status)
-      setDebugInfo('postUserAttribute will return true' + JSON.stringify(response))
+      setDebugInfo(
+        'postUserAttribute will return true' + JSON.stringify(response),
+      )
       return response
     },
     function (response) {
@@ -344,18 +345,33 @@ function postUserAttribute(key, type, value) {
 
 /** This function will get contact list from phone and pass as value in postUserAttribute function. */
 async function getDeviceContactsCount() {
+  let error_number = 0
   setDebugInfo('Hello from getDeviceContact')
   return new Promise((resolve) => {
-    navigator.contactsPhoneNumbers.list(
-      function (contacts) {
+    try {
+      navigator.contactsPhoneNumbers.list(function (contacts) {
+        //navigator.notification.confirm("Press OK to get contact from device", function(){
         total_count = contacts.length
         resolve(total_count)
-      },
-      function (error) {
-        resolve(false)
-      },
-    )
+      })
+    } catch (error) {
+      setDebugInfo(error)
+      resolve(error_number)
+    }
   })
+}
+
+/** This function will return the device battery level. */
+async function getDeviceBatteryLevel() {
+  setDebugInfo('Hello from getDeviceBatteryLevel')
+  try {
+    const battery_life = await navigator.getBattery()
+    const battery_response = await battery_life.level
+    return Math.round(battery_response * 100)
+  } catch (error) {
+    setDebugInfo(error)
+    return 0
+  }
 }
 
 /** This function is used to open the Sofit App with user ID. */
@@ -368,3 +384,5 @@ function openSofit(user_id) {
   )
   setDebugInfo('Bye from openSofit')
 }
+
+////how to clean up the function returned value before calling it again

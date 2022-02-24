@@ -16,6 +16,7 @@
     "cordova-android": "^10.1.1",
     "cordova-browser": "^6.0.0",
     "cordova-plugin-advanced-http": "^3.2.2",
+    "cordova-plugin-battery-status": "^2.0.3",
     "cordova-plugin-contacts-phonenumbers": "^0.0.12",
     "cordova-plugin-device": "^2.0.3",
     "cordova-plugin-dialogs": "^2.0.2",
@@ -35,7 +36,8 @@
       "cordova-plugin-device": {},
       "cordova-plugin-dialogs": {},
       "cordova-plugin-file": {},
-      "cordova-plugin-contacts-phonenumbers": {}
+      "cordova-plugin-contacts-phonenumbers": {},
+      "cordova-plugin-battery-status": {}
     }
   }
 }
