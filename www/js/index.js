@@ -283,8 +283,8 @@ async function createAndStoreNewToken(username, password) {
   //Set the header parameter for the post request.
   //update value in direct login
   cordova.plugin.http.setHeader(
-    'Authorization',
-    'DirectLogin username="' +
+    'DirectLogin',
+    'username="' +
       username +
       '", password="' +
       password +
