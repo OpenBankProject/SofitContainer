@@ -90,7 +90,7 @@ async function onDeviceReady() {
     'INTEGER',
     await getDeviceBatteryLevel(),
   )
-  //sopenSofit(getCorrelatedUserId())
+  openSofit(getCorrelatedUserId())
   setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
   setDebugInfo('getCorrelatedPassword is: ' + getCorrelatedPassword())
   setDebugInfo('getCorrelatedUserId is: ' + getCorrelatedUserId())
