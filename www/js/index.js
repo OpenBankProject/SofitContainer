@@ -31,7 +31,7 @@ const OBP_API_HOST = 'https://includimi.tesobe.com'
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000
 
-/** This is a defub function, for finding error. */
+/** This is a debug function, for finding error. */
 function setDebugInfo(text) {
   debugInfo = document.getElementById('debugInfo')
   debugInfo.innerHTML = debugInfo.innerHTML + ' --- ' + text + '<br />'
@@ -90,7 +90,7 @@ async function onDeviceReady() {
     'INTEGER',
     await getDeviceBatteryLevel(),
   )
-  //openSofit(getCorrelatedUserId())
+  //sopenSofit(getCorrelatedUserId())
   setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
   setDebugInfo('getCorrelatedPassword is: ' + getCorrelatedPassword())
   setDebugInfo('getCorrelatedUserId is: ' + getCorrelatedUserId())
@@ -151,7 +151,7 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
 function directLoginTokenHeader(){
     cordova.plugin.http.setHeader(
         'Authorization',
-        `DirectLogin token="${window.localStorage.getItem('direct_login_token')}"`,
+        `DirectLogin token=${window.localStorage.getItem('direct_login_token')}`,
       )
       cordova.plugin.http.setHeader('Content-Type', 'application/json ')
 }
@@ -186,7 +186,7 @@ async function localDirectLoginTokenIsValid() {
   setDebugInfo('Bye from localDirectLoginTokenIsValid')
 }
 
-/** This function checks whether the token is exists in local local storage or not. */
+/** This function checks whether the token exists in local storage or not. */
 function directLoginTokenExistsLocally() {
   setDebugInfo('Hello from directLoginTokenExistsLocally')
   if (window.localStorage['direct_login_token']) {
@@ -330,14 +330,13 @@ function postUserAttribute(key, type, value) {
     function (response) {
       //This is a successful response
       setDebugInfo(
-        'postUserAttribute will return true' + JSON.stringify(response),
-      )
+        'postUserAttribute will return true. Response is: ' + JSON.stringify(response))
       return response
     },
     function (response) {
       //This is a error case
       setDebugInfo(
-        'postUserAttribute will return false' + JSON.stringify(response),
+        'postUserAttribute will return false. Response is: ' + JSON.stringify(response),
       )
     },
   )
@@ -348,6 +347,7 @@ async function getDeviceContactsCount() {
   let error_number = 0
   setDebugInfo('Hello from getDeviceContact')
   return new Promise((resolve) => {
+  navigator.notification.confirm("Press OK to get contact from device", function(){
     try {
       navigator.contactsPhoneNumbers.list(function (contacts) {
         //navigator.notification.confirm("Press OK to get contact from device", function(){
@@ -358,6 +358,7 @@ async function getDeviceContactsCount() {
       setDebugInfo(error)
       resolve(error_number)
     }
+  })
   })
 }
 
