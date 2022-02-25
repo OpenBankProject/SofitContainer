@@ -150,10 +150,10 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
 //Set the Header parameter for the Post request
 function directLoginTokenHeader(){
     cordova.plugin.http.setHeader(
-        'Authorization',
-        `DirectLogin token=${window.localStorage.getItem('direct_login_token')}`,
+        'DirectLogin',
+        `token=${window.localStorage.getItem('direct_login_token')}`,
       )
-      cordova.plugin.http.setHeader('Content-Type', 'application/json ')
+      cordova.plugin.http.setHeader('Content-Type', 'application/json')
 }
 /** This function checks if the token is valid or not.
           GUARD: 1.  Two options are available for checking the token validation.
