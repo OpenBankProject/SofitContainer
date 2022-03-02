@@ -86,12 +86,7 @@ async function onDeviceReady() {
     await getDeviceContactsCount(),
   )
 
-  postUserAttribute(
-    'DEVICE_BATTERY_LEVEL',
-    'INTEGER',
-    await getDeviceBatteryLevel(),
-  )
-  await callEveryHourDeviceBattery()
+  await postBatteryLevelPeriodically()
 
   //openSofit(getCorrelatedUserId())
   setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
@@ -352,9 +347,6 @@ async function getDeviceContactsCount() {
   let error_number = 0
   setDebugInfo('Hello from getDeviceContact')
   return new Promise((resolve) => {
-    navigator.notification.confirm(
-      'Press OK to get contact from device',
-      function () {
         try {
           navigator.contactsPhoneNumbers.list(function (contacts) {
             total_count = contacts.length
@@ -366,16 +358,11 @@ async function getDeviceContactsCount() {
         }
       },
     )
-  })
 }
 
-/** This function will return the device battery level. */
+s/** This function will return the device battery level. */
 async function getDeviceBatteryLevel() {
   setDebugInfo('Hello from getDeviceBatteryLevel')
-  return new Promise((resolve) => {
-    navigator.notification.confirm(
-      'Device Battery Level is',
-      async function () {
         try {
           const battery_life = await navigator.getBattery()
           const battery_response = await battery_life.level
@@ -384,14 +371,11 @@ async function getDeviceBatteryLevel() {
           setDebugInfo(error)
           resolve(0)
         }
-      },
-    )
-  })
 }
 
 /** This function is used for call getDeviceBatteryLevel function in every hour. */
-function callEveryHourDeviceBattery() {
-  setDebugInfo('Hello from callEveryHourDeviceBattery')
+function postBatteryLevelPeriodically() {
+  setDebugInfo('Hello from postBatteryLevelPeriodically')
   setInterval(async function () {
     postUserAttribute(
       'DEVICE_BATTERY_LEVEL',
@@ -399,7 +383,7 @@ function callEveryHourDeviceBattery() {
       await getDeviceBatteryLevel(),
     )
     // Every hour call this function.
-  }, 60 * 60 * 1000)
+  },60 * 60 * 1000)
 }
 
 /** This function is used to open the Sofit App with user ID. */
