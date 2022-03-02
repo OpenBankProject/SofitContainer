@@ -85,12 +85,15 @@ async function onDeviceReady() {
     'INTEGER',
     await getDeviceContactsCount(),
   )
+
   postUserAttribute(
     'DEVICE_BATTERY_LEVEL',
     'INTEGER',
     await getDeviceBatteryLevel(),
   )
-  openSofit(getCorrelatedUserId())
+  await callEveryHourDeviceBattery()
+
+  //openSofit(getCorrelatedUserId())
   setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
   setDebugInfo('getCorrelatedPassword is: ' + getCorrelatedPassword())
   setDebugInfo('getCorrelatedUserId is: ' + getCorrelatedUserId())
@@ -148,12 +151,12 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
 }
 
 //Set the Header parameter for the Post request
-function directLoginTokenHeader(){
-    cordova.plugin.http.setHeader(
-        'DirectLogin',
-        `token=${window.localStorage.getItem('direct_login_token')}`,
-      )
-      cordova.plugin.http.setHeader('Content-Type', 'application/json')
+function directLoginTokenHeader() {
+  cordova.plugin.http.setHeader(
+    'DirectLogin',
+    `token=${window.localStorage.getItem('direct_login_token')}`,
+  )
+  cordova.plugin.http.setHeader('Content-Type', 'application/json')
 }
 /** This function checks if the token is valid or not.
           GUARD: 1.  Two options are available for checking the token validation.
@@ -219,7 +222,7 @@ async function createNewUser() {
       Math.floor(Math.random() * charactersLength),
     )
   }
-  const username = uuid_string
+  const username = "Sofit" + uuid_string
   setDebugInfo('Username: ' + username)
   setDebugInfo('password: ' + randomLongStringPassword)
   window.localStorage.setItem('correlated_username', username)
@@ -251,12 +254,12 @@ async function createNewUser() {
           resolve(true)
         } else {
           resolve(false)
-          setDebugInfo('Status is: ', + response.status)
+          setDebugInfo('Status is: ', +response.status)
         }
       },
       function (response) {
         resolve(false)
-        setDebugInfo('Error in createNewUser: ', + response.code)
+        setDebugInfo('Error in createNewUser: ', +response.code)
       },
     )
   })
@@ -281,7 +284,6 @@ async function createAndStoreNewToken(username, password) {
 
   cordova.plugin.http.setDataSerializer('json')
   //Set the header parameter for the post request.
-  //update value in direct login
   cordova.plugin.http.setHeader(
     'DirectLogin',
     'username="' +
@@ -309,13 +311,12 @@ async function createAndStoreNewToken(username, password) {
       },
       function (response) {
         resolve(false)
-        setDebugInfo('Error in createAndStoreNewToken', + response.code)
+        setDebugInfo('Error in createAndStoreNewToken', +response.code)
       },
     )
   })
   setDebugInfo('Bye from createAndStoreNewToken')
 }
-
 
 function postUserAttribute(key, type, value) {
   setDebugInfo('Hello from postUserAttribute')
@@ -330,13 +331,16 @@ function postUserAttribute(key, type, value) {
     function (response) {
       //This is a successful response
       setDebugInfo(
-        'postUserAttribute will return true. Response is: ' + JSON.stringify(response))
+        'postUserAttribute will return true. Response is: ' +
+          JSON.stringify(response),
+      )
       return response
     },
     function (response) {
       //This is a error case
       setDebugInfo(
-        'postUserAttribute will return false. Response is: ' + JSON.stringify(response),
+        'postUserAttribute will return false. Response is: ' +
+          JSON.stringify(response),
       )
     },
   )
@@ -344,35 +348,58 @@ function postUserAttribute(key, type, value) {
 
 /** This function will get contact list from phone and pass as value in postUserAttribute function. */
 async function getDeviceContactsCount() {
+// In case error code block will be run, because of this, will not affect on other functions.
   let error_number = 0
   setDebugInfo('Hello from getDeviceContact')
   return new Promise((resolve) => {
-  navigator.notification.confirm("Press OK to get contact from device", function(){
-    try {
-      navigator.contactsPhoneNumbers.list(function (contacts) {
-        //navigator.notification.confirm("Press OK to get contact from device", function(){
-        total_count = contacts.length
-        resolve(total_count)
-      })
-    } catch (error) {
-      setDebugInfo(error)
-      resolve(error_number)
-    }
-  })
+    navigator.notification.confirm(
+      'Press OK to get contact from device',
+      function () {
+        try {
+          navigator.contactsPhoneNumbers.list(function (contacts) {
+            total_count = contacts.length
+            resolve(total_count)
+          })
+        } catch (error) {
+          setDebugInfo(error)
+          resolve(error_number)
+        }
+      },
+    )
   })
 }
 
 /** This function will return the device battery level. */
 async function getDeviceBatteryLevel() {
   setDebugInfo('Hello from getDeviceBatteryLevel')
-  try {
-    const battery_life = await navigator.getBattery()
-    const battery_response = await battery_life.level
-    return Math.round(battery_response * 100)
-  } catch (error) {
-    setDebugInfo(error)
-    return 0
-  }
+  return new Promise((resolve) => {
+    navigator.notification.confirm(
+      'Device Battery Level is',
+      async function () {
+        try {
+          const battery_life = await navigator.getBattery()
+          const battery_response = await battery_life.level
+          resolve(Math.round(battery_response * 100))
+        } catch (error) {
+          setDebugInfo(error)
+          resolve(0)
+        }
+      },
+    )
+  })
+}
+
+/** This function is used for call getDeviceBatteryLevel function in every hour. */
+function callEveryHourDeviceBattery() {
+  setDebugInfo('Hello from callEveryHourDeviceBattery')
+  setInterval(async function () {
+    postUserAttribute(
+      'DEVICE_BATTERY_LEVEL',
+      'INTEGER',
+      await getDeviceBatteryLevel(),
+    )
+    // Every hour call this function.
+  }, 60 * 60 * 1000)
 }
 
 /** This function is used to open the Sofit App with user ID. */
@@ -386,4 +413,3 @@ function openSofit(user_id) {
   setDebugInfo('Bye from openSofit')
 }
 
-////how to clean up the function returned value before calling it again
