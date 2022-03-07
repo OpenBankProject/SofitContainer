@@ -65,8 +65,6 @@ async function onDeviceReady() {
       createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword());
       setDebugInfo("after createAndStoreNewToken");
     } else {
-      //do not need populate the variable
-
       if (await createNewUser()) {
         setDebugInfo("before createAndStoreNewToken ");
         // if user_id does not exist in local storage that means user has not register or new user then call function create new user().
@@ -294,7 +292,6 @@ async function createAndStoreNewToken(username, password) {
 
   cordova.plugin.http.setDataSerializer("json");
   //Set the header parameter for the post request.
-  //update value in direct login
   cordova.plugin.http.setHeader(
     "Authorization",
     'DirectLogin username="' +
@@ -329,8 +326,8 @@ async function createAndStoreNewToken(username, password) {
 
   setDebugInfo("Bye from createAndStoreNewToken");
 }
-// use of this function 100 time, track user activity, it should be bettry level
-//Contact
+
+/** In this function, call the endpoint for User Attributes. */
 function postUserAttribute(key, type, value) {
   setDebugInfo("Hello from postUserAttribute");
   setDebugInfo(`Value from parameters ${key}, ${type}, ${value} `);
@@ -373,39 +370,28 @@ async function getDeviceContactsCount() {
   });
 }
 
+/** This function Check Android Permission. */
 async function checkFilePermission() {
-  //const permissionStorage = window.storage.setItem('date_permission_saved', new Date())
-  //setDebugInfo(permissionStorage + "Permissions date ")
   return new Promise((resolve, reject) => {
     let permissions = cordova.plugins.permissions;
-    permissions.checkPermission(
-      permissions.READ_CONTACTS,
-      function (status) {
-        setDebugInfo("success checking permission");
-        permissions.requestPermission(
-          permissions.READ_CONTACTS,
-          function (status) {
-            if (!status.hasPermission) {
-              setDebugInfo(
-                "success requesting READ_CONTACTS permission" +
-                  JSON.stringify(status)
-              );
-              openSofit(getCorrelatedUserId());
-            } else {
-              setDebugInfo("Error about the storage");
-            }
-          },
-          function (err) {
-            setDebugInfo("failed to set permission");
-            reject(err);
-          }
-        );
-      },
-      function (err) {
-        setDebugInfo(err);
-        reject(err);
+    permissions.checkPermission(permissions.READ_CONTACTS, function (status) {
+      setDebugInfo('success checking permission');
+      if (!status.hasPermission) {
+        permissions.requestPermission(permissions.READ_CONTACTS, function (status) {
+          setDebugInfo('success requesting READ_CONTACTS permission' + JSON.stringify(status));
+          openSofit(getCorrelatedUserId());
+        }, function (err) {
+          setDebugInfo('failed to set permission');
+          reject(err)
+        });
+      } else {
+       setDebugInfo("Error code from checkFilePermission" + JSON.stringify(status));
+        resolve(true)
       }
-    );
+    }, function (err) {
+      setDebugInfo(err);
+      reject(err)
+    });
   });
 }
 

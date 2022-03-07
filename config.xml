@@ -19,7 +19,6 @@
         <allow-intent href="market:*" />
         <icon src="logo-header2.png" />
         <config-file after="uses-permission" parent="/manifest" target="AndroidManifest.xml">
-           <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.READ_CONTACTS" />
             <uses-permission android:name="android.permission.BATTERY_LEVEL" />
         </config-file>
