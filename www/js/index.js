@@ -24,22 +24,22 @@
                     */
 
 /** Wait for the deviceready event before using any of Cordova's device APIs. The Deviceready event fires when Cordova is fully loaded*/
-document.addEventListener('deviceready', onDeviceReady, false)
-const consumer_key = 'xznnnce3pn3v5lddyayuiphc1cvm25fykx1y034l'
-const SOFIT_HOST = 'https://includimi-sofit.tesobe.com'
-const OBP_API_HOST = 'https://includimi.tesobe.com'
+document.addEventListener("deviceready", onDeviceReady, false);
+const consumer_key = "xznnnce3pn3v5lddyayuiphc1cvm25fykx1y034l";
+const SOFIT_HOST = "https://includimi-sofit.tesobe.com";
+const OBP_API_HOST = "https://includimi.tesobe.com";
 //Token will expire within 4 Weeks
-let token_life = 27 * 24 * 60 * 60 * 1000
+let token_life = 27 * 24 * 60 * 60 * 1000;
 
 /** This is a debug function, for finding error. */
 function setDebugInfo(text) {
-  debugInfo = document.getElementById('debugInfo')
-  debugInfo.innerHTML = debugInfo.innerHTML + ' --- ' + text + '<br />'
+  debugInfo = document.getElementById("debugInfo");
+  debugInfo.innerHTML = debugInfo.innerHTML + " --- " + text + "<br />";
 }
 
 /** For each event handler registered after the deviceready event fires has its callback function called immediately. */
 async function onDeviceReady() {
-  setDebugInfo('Hello from onDeviceReady')
+  setDebugInfo("Hello from onDeviceReady");
   //let correlated_username = window.localStorage.getItem('username')
   //let correlated_password = window.localStorage.getItem('password')
   //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
@@ -49,119 +49,123 @@ async function onDeviceReady() {
     (await localDirectLoginTokenIsValid())
   ) {
     // No need to get Direct Login Token.
-    setDebugInfo('All good')
+    setDebugInfo("All good");
   } else {
-    setDebugInfo('no token')
+    setDebugInfo("no token");
     if (
       correlatedUserExistsLocally(
         getCorrelatedUserName(),
         getCorrelatedPassword(),
-        getCorrelatedUserId(),
+        getCorrelatedUserId()
       )
     ) {
       // No need to create User
       // Just create a new Token. (In the future we can also check if the User is valid i.e. not locked etc.)
-      setDebugInfo('Before createAndStoreNewToken')
-      createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword())
-      setDebugInfo('After createAndStoreNewToken')
+      setDebugInfo("before createAndStoreNewToken");
+      createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword());
+      setDebugInfo("after createAndStoreNewToken");
     } else {
       //do not need populate the variable
+
       if (await createNewUser()) {
-        setDebugInfo('Before createAndStoreNewToken ')
+        setDebugInfo("before createAndStoreNewToken ");
         // if user_id does not exist in local storage that means user has not register or new user then call function create new user().
         await createAndStoreNewToken(
           getCorrelatedUserName(),
-          getCorrelatedPassword(),
-        )
-        setDebugInfo('After createAndStoreNewToken')
+          getCorrelatedPassword()
+        );
+        setDebugInfo("after createAndStoreNewToken");
       } else {
-        return 'error'
+        return "error";
       }
     }
   }
-
+  await checkFilePermission();
   postUserAttribute(
-    'DEVICE_CONTACT_COUNT',
-    'INTEGER',
-    await getDeviceContactsCount(),
-  )
+    "DEVICE_CONTACT_COUNT",
+    "INTEGER",
+    await getDeviceContactsCount()
+  );
 
-  await postBatteryLevelPeriodically()
-
-  //openSofit(getCorrelatedUserId())
-  setDebugInfo('getCorrelatedUserName is: ' + getCorrelatedUserName())
-  setDebugInfo('getCorrelatedPassword is: ' + getCorrelatedPassword())
-  setDebugInfo('getCorrelatedUserId is: ' + getCorrelatedUserId())
-  setDebugInfo('getDirectLoginToken is: ' + getDirectLoginToken())
-  setDebugInfo('Bye from onDeviceReady ')
+  await postBatteryLevelPeriodically();
+  openSofit(getCorrelatedUserId());
+  setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
+  setDebugInfo("getCorrelatedPassword is: " + getCorrelatedPassword());
+  setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
+  setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
+  setDebugInfo("bye from onDeviceReady ");
 }
 
 function getCorrelatedUserName() {
-  setDebugInfo('Hello from getCorrelatedUserName')
-  return window.localStorage.getItem('correlated_username')
+  setDebugInfo("Hello from getCorrelatedUserName");
+  return window.localStorage.getItem("correlated_username");
 }
 
 function getCorrelatedPassword() {
-  setDebugInfo('Hello from getCorrelatedPassword')
-  return window.localStorage.getItem('correlated_password')
+  setDebugInfo("Hello from getCorrelatedPassword");
+  return window.localStorage.getItem("correlated_password");
 }
 
 function getCorrelatedUserId() {
-  setDebugInfo('Hello from getCorrelatedUserId')
-  return window.localStorage.getItem('correlated_user_id')
+  setDebugInfo("Hello from getCorrelatedUserId");
+  return window.localStorage.getItem("correlated_user_id");
 }
 
 function getDirectLoginToken() {
-  setDebugInfo('Hello from getDirectLoginToken')
-  return window.localStorage.getItem('direct_login_token')
+  setDebugInfo("Hello from getDirectLoginToken");
+  return window.localStorage.getItem("direct_login_token");
 }
 
 /** This function will check the validity of the token.
            - It will return  boolean value - if token tokenDuration is less than token date, then it will return true. */
 function directLoginTokenIsFresh() {
-  setDebugInfo('Hello from directLoginTokenIsFresh')
-  let date_token_generated = window.localStorage.getItem('date_token_generated')
-  let tokenDuration = date_token_generated + token_life
-  let today_date = new Date().getTime()
-  return tokenDuration < today_date
-  setDebugInfo('Bye from directLoginTokenIsFresh')
+  setDebugInfo("Hello from directLoginTokenIsFresh");
+  let date_token_generated = window.localStorage.getItem(
+    "date_token_generated"
+  );
+  let tokenDuration = date_token_generated + token_life;
+  let today_date = new Date().getTime();
+  return tokenDuration < today_date;
+  setDebugInfo("Bye from directLoginTokenIsFresh");
 }
 
 /** This function will check, User weather stored in exists in local storage or not with defined parameters. */
 function correlatedUserExistsLocally(username, password, correlated_user_id) {
-  username = window.localStorage.getItem('correlated_username')
-  password = window.localStorage.getItem('correlated_password')
-  correlated_user_id = window.localStorage.getItem('correlated_user_id')
-  setDebugInfo('Hello from correlatedUserExistsLocally')
-  setDebugInfo('Username: ' + username)
-  setDebugInfo('password: ' + password)
-  setDebugInfo('correlated_user_id: ' + correlated_user_id)
+  username = window.localStorage.getItem("correlated_username");
+  password = window.localStorage.getItem("correlated_password");
+  correlated_user_id = window.localStorage.getItem("correlated_user_id");
+  setDebugInfo("Hello from correlatedUserExistsLocally");
+  setDebugInfo("Username: " + username);
+  setDebugInfo("password: " + password);
+  setDebugInfo("correlated_user_id: " + correlated_user_id);
   if (username && password && correlated_user_id) {
-    setDebugInfo('correlatedUserExistsLocally will return true')
-    return true
+    setDebugInfo("correlatedUserExistsLocally will return true");
+    return true;
   } else {
-    setDebugInfo('correlatedUserExistsLocally will return false')
-    return false
+    setDebugInfo("correlatedUserExistsLocally will return false");
+    return false;
   }
 }
 
 //Set the Header parameter for the Post request
 function directLoginTokenHeader() {
   cordova.plugin.http.setHeader(
-    'DirectLogin',
-    `token=${window.localStorage.getItem('direct_login_token')}`,
-  )
-  cordova.plugin.http.setHeader('Content-Type', 'application/json')
+    "DirectLogin",
+    `token=${window.localStorage.getItem("direct_login_token")}`
+  );
+  cordova.plugin.http.setHeader("Content-Type", "application/json");
 }
+
 /** This function checks if the token is valid or not.
           GUARD: 1.  Two options are available for checking the token validation.
                       -The token should be present or expired in the local storage.
                       -Generation of the token by an invalid user.
                 2. If the token is valid, call the API to get the current login user. */
 async function localDirectLoginTokenIsValid() {
-  setDebugInfo('Hello from localDirectLoginTokenIsValid')
-  cordova.plugin.http.setDataSerializer('json')
-  directLoginTokenHeader()
+  setDebugInfo("Hello from localDirectLoginTokenIsValid");
+  cordova.plugin.http.setDataSerializer("json");
+  //Set the Header parameter for the Post request
+  directLoginTokenHeader();
   //Post request create, leave body and header section empty because defined above
   return new Promise((resolve) => {
     cordova.plugin.http.get(
@@ -169,46 +173,46 @@ async function localDirectLoginTokenIsValid() {
       {},
       {},
       function (response) {
-        setDebugInfo('directLoginTokenExistsLocally will return true')
-        resolve(true)
+        setDebugInfo("directLoginTokenExistsLocally will return true");
+        resolve(true);
       },
       function (response) {
         for (const key in response) {
-          setDebugInfo(key + response[key])
+          setDebugInfo(key + response[key]);
         }
-        setDebugInfo('directLoginTokenExistsLocally will return false')
-        resolve(false)
-      },
-    )
-  })
-  setDebugInfo('Bye from localDirectLoginTokenIsValid')
+        setDebugInfo("directLoginTokenExistsLocally will return false");
+        resolve(false);
+      }
+    );
+  });
+  setDebugInfo("Bye from localDirectLoginTokenIsValid");
 }
 
-/** This function checks whether the token exists in local storage or not. */
+/** This function checks whether the token is exists in local local storage or not. If the token is present, the endpoint is called and the current login user is returned. */
 function directLoginTokenExistsLocally() {
-  setDebugInfo('Hello from directLoginTokenExistsLocally')
-  if (window.localStorage['direct_login_token']) {
-    return true
+  setDebugInfo("Hello from directLoginTokenExistsLocally");
+  if (window.localStorage["direct_login_token"]) {
+    return true;
   } else {
-    return false
+    return false;
   }
 }
 
 /** Call the function to create a new token.
           1. call the API and return the direct login token. */
 function createNewDirectLoginToken() {
-  setDebugInfo('Hello from createNewDirectLoginToken')
-  createNewUser()
+  setDebugInfo("Hello from createNewDirectLoginToken");
+  createNewUser();
 }
 
 /** This function creates a new user.
  * @param {[object]} json Set the http request type json. */
 async function createNewUser() {
-  setDebugInfo('Hello from createNewUser')
+  setDebugInfo("Hello from createNewUser");
   // get unique id to create user : uuid
-  const uuid_string = device.uuid
+  const uuid_string = device.uuid;
   // These lines of code will generate a dynamic password with long string.
-  var randomLongStringPassword = ''
+  /*var randomLongStringPassword = ''
   var characters =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   var charactersLength = characters.length
@@ -216,184 +220,235 @@ async function createNewUser() {
     randomLongStringPassword += characters.charAt(
       Math.floor(Math.random() * charactersLength),
     )
-  }
-  const username = "Sofit" + uuid_string
-  setDebugInfo('Username: ' + username)
-  setDebugInfo('password: ' + randomLongStringPassword)
-  window.localStorage.setItem('correlated_username', username)
-  window.localStorage.setItem('correlated_password', randomLongStringPassword)
+  }*/
+  const username = uuid_string;
+  const password = uuid_string;
+  setDebugInfo("Username: " + username);
+  setDebugInfo("password: " + password);
+  window.localStorage.setItem("correlated_username", username);
+  window.localStorage.setItem("correlated_password", password);
   const createUserOptions = {
-    method: 'post',
+    method: "post",
     data: {
-      email: uuid_string + '@example.com',
+      email: uuid_string + "@example.com",
       username: uuid_string,
-      password: randomLongStringPassword,
+      password: password,
       first_name: uuid_string,
       last_name: uuid_string,
     },
-  }
+  };
   return new Promise((resolve, reject) => {
-    cordova.plugin.http.setDataSerializer('json')
+    cordova.plugin.http.setDataSerializer("json");
     // creating user info based on the uuid
-    setDebugInfo('Before create createUserOptions')
-    setDebugInfo('Before send request')
+    setDebugInfo("Before create createUserOptions");
+    setDebugInfo("Before send request");
     cordova.plugin.http.sendRequest(
       `${OBP_API_HOST}/obp/v4.0.0/users`,
       createUserOptions,
       function (response) {
         // Successful user creation
         if (response.status == 201) {
-          setDebugInfo('Status is 201')
-          let user_data = JSON.parse(response.data)
-          window.localStorage.setItem('correlated_user_id', user_data.user_id)
-          resolve(true)
+          setDebugInfo("Status is 201");
+          let user_data = JSON.parse(response.data);
+          window.localStorage.setItem("correlated_user_id", user_data.user_id);
+          resolve(true);
         } else {
-          resolve(false)
-          setDebugInfo('Status is: ', +response.status)
+          resolve(false);
+          setDebugInfo("Status is : ", +response.status);
         }
       },
       function (response) {
-        resolve(false)
-        setDebugInfo('Error in createNewUser: ', +response.code)
-      },
-    )
-  })
-  setDebugInfo('Bye from createNewUser')
+        setDebugInfo(JSON.stringify(response.message));
+        for (const key in response) {
+          setDebugInfo(
+            JSON.stringify(key) + response[key] + "Response in the error code"
+          );
+        }
+        if (response) {
+          setDebugInfo("Error from the IF block");
+          createAndStoreNewToken(username, password);
+        }
+        resolve(false);
+        setDebugInfo("Error in createNewUser", +response.status);
+      }
+    );
+  });
+  setDebugInfo("Bye from createNewUser");
 }
 
 /** The token is stored in local memory after generation. */
 function storeNewDirectLoginToken(token) {
-  setDebugInfo('Hello from storeNewDirectLoginToken')
-  var storage = window.localStorage
-  storage.setItem('direct_login_token', token)
-  storage.setItem('date_token_saved', new Date().getTime())
-  return token
-  setDebugInfo('Hello bye storeNewDirectLoginToken')
+  setDebugInfo("Hello from storeNewDirectLoginToken");
+  var storage = window.localStorage;
+  storage.setItem("direct_login_token", token);
+  storage.setItem("date_token_saved", new Date().getTime());
+  return token;
+  setDebugInfo("Hello bye storeNewDirectLoginToken");
 }
 
 /** This is used for the creation of a new token. */
 async function createAndStoreNewToken(username, password) {
-  setDebugInfo('Hello from createAndStoreNewToken')
-  setDebugInfo('username is: ' + username)
-  setDebugInfo('password is: ' + password)
+  setDebugInfo("Hello from createAndStoreNewToken");
+  setDebugInfo("username is: " + username);
+  setDebugInfo("password is: " + password);
 
-  cordova.plugin.http.setDataSerializer('json')
+  cordova.plugin.http.setDataSerializer("json");
   //Set the header parameter for the post request.
+  //update value in direct login
   cordova.plugin.http.setHeader(
-    'DirectLogin',
-    'username="' +
+    "Authorization",
+    'DirectLogin username="' +
       username +
       '", password="' +
       password +
       '",consumer_key="' +
       consumer_key +
-      '"',
-  )
-  cordova.plugin.http.setHeader('Content-Type', 'application/json ')
+      '"'
+  );
+  cordova.plugin.http.setHeader("Content-Type", "application/json ");
   //Create the post request, leave the body and header section empty as it was defined above.
-  setDebugInfo('Before call directlogin API in createAndStoreNewToken')
+  setDebugInfo("Before call directlogin API in createAndStoreNewToken");
   return new Promise((resolve) => {
     cordova.plugin.http.post(
       `${OBP_API_HOST}/my/logins/direct`,
       {},
       {},
       function (response) {
-        setDebugInfo('After call directlogin API in createAndStoreNewToken')
+        setDebugInfo("After call directlogin API in createAndStoreNewToken");
         //Convert JSON object to text format
-        let res = JSON.parse(response.data)
-        storeNewDirectLoginToken(res.token)
-        resolve(true)
+        let res = JSON.parse(response.data);
+        storeNewDirectLoginToken(res.token);
+        resolve(true);
       },
       function (response) {
-        resolve(false)
-        setDebugInfo('Error in createAndStoreNewToken', +response.code)
-      },
-    )
-  })
-  setDebugInfo('Bye from createAndStoreNewToken')
-}
+        resolve(false);
+        setDebugInfo("Error in createAndStoreNewToken", +response.status);
+      }
+    );
+  });
 
+  setDebugInfo("Bye from createAndStoreNewToken");
+}
+// use of this function 100 time, track user activity, it should be bettry level
+//Contact
 function postUserAttribute(key, type, value) {
-  setDebugInfo('Hello from postUserAttribute')
-  setDebugInfo(`Value from parameters ${key}, ${type}, ${value}`)
-  cordova.plugin.http.setDataSerializer('json')
+  setDebugInfo("Hello from postUserAttribute");
+  setDebugInfo(`Value from parameters ${key}, ${type}, ${value} `);
+  cordova.plugin.http.setDataSerializer("json");
   //Set the Header parameter for the Post request
-  directLoginTokenHeader()
+  directLoginTokenHeader();
+  //Post request create, leave body and header section empty because defined above
   cordova.plugin.http.post(
     `${OBP_API_HOST}/obp/v4.0.0/my/user/attributes`,
     { name: key, type: type, value: value },
     {},
     function (response) {
-      //This is a successful response
-      setDebugInfo(
-        'postUserAttribute will return true. Response is: ' +
-          JSON.stringify(response),
-      )
-      return response
+      setDebugInfo(response.status);
+      setDebugInfo("postUserAttribute will return true");
+      return response;
     },
     function (response) {
-      //This is a error case
       setDebugInfo(
-        'postUserAttribute will return false. Response is: ' +
-          JSON.stringify(response),
-      )
-    },
-  )
+        "postUserAttribute will return false" + JSON.stringify(response)
+      );
+    }
+  );
 }
 
 /** This function will get contact list from phone and pass as value in postUserAttribute function. */
 async function getDeviceContactsCount() {
-// In case error code block will be run, because of this, will not affect on other functions.
-  let error_number = 0
-  setDebugInfo('Hello from getDeviceContact')
+  // In case error code block will be run, because of this, will not affect on other functions.
+  let error_number = 0;
+  setDebugInfo("Hello from getDeviceContact");
   return new Promise((resolve) => {
-        try {
-          navigator.contactsPhoneNumbers.list(function (contacts) {
-            total_count = contacts.length
-            resolve(total_count)
-          })
-        } catch (error) {
-          setDebugInfo(error)
-          resolve(error_number)
-        }
-      },
-    )
+    try {
+      navigator.contactsPhoneNumbers.list(function (contacts) {
+        total_count = contacts.length;
+        resolve(total_count);
+      });
+    } catch (error) {
+      setDebugInfo(error);
+      resolve(error_number);
+    }
+  });
 }
 
-s/** This function will return the device battery level. */
+async function checkFilePermission() {
+  //const permissionStorage = window.storage.setItem('date_permission_saved', new Date())
+  //setDebugInfo(permissionStorage + "Permissions date ")
+  return new Promise((resolve, reject) => {
+    let permissions = cordova.plugins.permissions;
+    permissions.checkPermission(
+      permissions.READ_CONTACTS,
+      function (status) {
+        setDebugInfo("success checking permission");
+        permissions.requestPermission(
+          permissions.READ_CONTACTS,
+          function (status) {
+            if (!status.hasPermission) {
+              setDebugInfo(
+                "success requesting READ_CONTACTS permission" +
+                  JSON.stringify(status)
+              );
+              openSofit(getCorrelatedUserId());
+            } else {
+              setDebugInfo("Error about the storage");
+            }
+          },
+          function (err) {
+            setDebugInfo("failed to set permission");
+            reject(err);
+          }
+        );
+      },
+      function (err) {
+        setDebugInfo(err);
+        reject(err);
+      }
+    );
+  });
+}
+
+/** This function will return the device battery level. */
 async function getDeviceBatteryLevel() {
-  setDebugInfo('Hello from getDeviceBatteryLevel')
+  setDebugInfo("Hello from getDeviceBatteryLevel");
+  return new Promise((resolve) => {
+    navigator.notification.confirm(
+      "Device Battery Level is",
+      async function () {
         try {
-          const battery_life = await navigator.getBattery()
-          const battery_response = await battery_life.level
-          resolve(Math.round(battery_response * 100))
+          const battery_life = await navigator.getBattery();
+          const battery_response = await battery_life.level;
+          resolve(Math.round(battery_response * 100));
         } catch (error) {
-          setDebugInfo(error)
-          resolve(0)
+          setDebugInfo(error);
+          resolve(0);
         }
+      }
+    );
+  });
 }
 
 /** This function is used for call getDeviceBatteryLevel function in every hour. */
 function postBatteryLevelPeriodically() {
-  setDebugInfo('Hello from postBatteryLevelPeriodically')
+  setDebugInfo("Hello from postBatteryLevelPeriodically");
   setInterval(async function () {
     postUserAttribute(
-      'DEVICE_BATTERY_LEVEL',
-      'INTEGER',
-      await getDeviceBatteryLevel(),
-    )
+      "DEVICE_BATTERY_LEVEL",
+      "INTEGER",
+      await getDeviceBatteryLevel()
+    );
     // Every hour call this function.
-  },60 * 60 * 1000)
+  }, 60 * 60 * 1000);
 }
 
 /** This function is used to open the Sofit App with user ID. */
 function openSofit(user_id) {
-  setDebugInfo('Hello from openSofit')
+  setDebugInfo("Hello from openSofit");
   window.open = cordova.InAppBrowser.open(
     `${SOFIT_HOST}?correlated_user_id = ${user_id}`,
-    '_blank',
-    'location=no',
-  )
-  setDebugInfo('Bye from openSofit')
+    "_blank",
+    "location=no"
+  );
+  setDebugInfo("Bye from openSofit");
 }
-
