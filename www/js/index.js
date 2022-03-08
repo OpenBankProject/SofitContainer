@@ -66,19 +66,21 @@ async function onDeviceReady() {
       setDebugInfo("after createAndStoreNewToken");
     } else {
       if (await createNewUser()) {
-        setDebugInfo("before createAndStoreNewToken ");
+        setDebugInfo("Before createAndStoreNewToken ");
         // if user_id does not exist in local storage that means user has not register or new user then call function create new user().
         await createAndStoreNewToken(
           getCorrelatedUserName(),
           getCorrelatedPassword()
         );
-        setDebugInfo("after createAndStoreNewToken");
+        setDebugInfo("After createAndStoreNewToken");
       } else {
         return "error";
       }
     }
   }
+
   await checkFilePermission();
+
   postUserAttribute(
     "DEVICE_CONTACT_COUNT",
     "INTEGER",
@@ -86,6 +88,7 @@ async function onDeviceReady() {
   );
 
   await postBatteryLevelPeriodically();
+
   openSofit(getCorrelatedUserId());
   setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
   setDebugInfo("getCorrelatedPassword is: " + getCorrelatedPassword());
@@ -256,6 +259,7 @@ async function createNewUser() {
         }
       },
       function (response) {
+        //User already exists in the database. This function handle error in create new user.
         setDebugInfo(JSON.stringify(response.message));
         for (const key in response) {
           setDebugInfo(
@@ -263,8 +267,7 @@ async function createNewUser() {
           );
         }
         if (response) {
-          setDebugInfo("Error from the IF block");
-          createAndStoreNewToken(username, password);
+          return createAndStoreNewToken(username, password);
         }
         resolve(false);
         setDebugInfo("Error in createNewUser", +response.status);
@@ -293,8 +296,8 @@ async function createAndStoreNewToken(username, password) {
   cordova.plugin.http.setDataSerializer("json");
   //Set the header parameter for the post request.
   cordova.plugin.http.setHeader(
-    "Authorization",
-    'DirectLogin username="' +
+    "DirectLogin",
+    'username="' +
       username +
       '", password="' +
       password +
@@ -354,7 +357,7 @@ function postUserAttribute(key, type, value) {
 
 /** This function will get contact list from phone and pass as value in postUserAttribute function. */
 async function getDeviceContactsCount() {
-  // In case error code block will be run, because of this, will not affect on other functions.
+  // In this case error code block will be run, because of this, will not affect on other functions.
   let error_number = 0;
   setDebugInfo("Hello from getDeviceContact");
   return new Promise((resolve) => {
@@ -374,24 +377,35 @@ async function getDeviceContactsCount() {
 async function checkFilePermission() {
   return new Promise((resolve, reject) => {
     let permissions = cordova.plugins.permissions;
-    permissions.checkPermission(permissions.READ_CONTACTS, function (status) {
-      setDebugInfo('success checking permission');
-      if (!status.hasPermission) {
-        permissions.requestPermission(permissions.READ_CONTACTS, function (status) {
-          setDebugInfo('success requesting READ_CONTACTS permission' + JSON.stringify(status));
-          openSofit(getCorrelatedUserId());
-        }, function (err) {
-          setDebugInfo('failed to set permission');
-          reject(err)
-        });
-      } else {
-       setDebugInfo("Error code from checkFilePermission" + JSON.stringify(status));
-        resolve(true)
+    permissions.checkPermission(
+      permissions.READ_CONTACTS,
+      function (status) {
+        setDebugInfo("success checking permission");
+        if (!status.hasPermission) {
+          permissions.requestPermission(
+            permissions.READ_CONTACTS,
+            function (status) {
+              setDebugInfo(
+                "success requesting READ_CONTACTS permission" +
+                  JSON.stringify(status)
+              );
+              openSofit(getCorrelatedUserId());
+            },
+            function (err) {
+              setDebugInfo("Failed to set permission");
+              reject(err);
+            }
+          );
+        } else {
+          setDebugInfo("Permission already exist" + JSON.stringify(status));
+          resolve(true);
+        }
+      },
+      function (err) {
+        setDebugInfo(err);
+        resolve(true);
       }
-    }, function (err) {
-      setDebugInfo(err);
-      reject(err)
-    });
+    );
   });
 }
 
