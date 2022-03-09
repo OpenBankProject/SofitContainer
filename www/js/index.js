@@ -174,19 +174,27 @@ async function localDirectLoginTokenIsValid() {
       {},
       {},
       function (response) {
-        setDebugInfo("directLoginTokenExistsLocally will return true");
+        let userid = {}
+        try {
+          userid = JSON.parse(response.data)
+        } catch (error) {
+
+        }
+        setDebugInfo("directLoginTokenExistsLocally will return true: " + JSON.stringify(userid.user_id));
+
+          window.localStorage.setItem("correlated_user_id",userid.user_id);
         resolve(true);
       },
       function (response) {
         for (const key in response) {
           setDebugInfo(key + response[key]);
         }
-        setDebugInfo("directLoginTokenExistsLocally will return false");
+        setDebugInfo("directLoginTokenExistsLocally will return false" + JSON.stringify(response));
         resolve(false);
       }
     );
   });
-  setDebugInfo("Bye from localDirectLoginTokenIsValid");
+
 }
 
 /** This function checks whether the token is exists in local local storage or not. If the token is present, the endpoint is called and the current login user is returned. */
@@ -212,28 +220,32 @@ async function createNewUser() {
   setDebugInfo("Hello from createNewUser");
   // get unique id to create user : uuid
   const uuid_string = device.uuid;
-  // These lines of code will generate a dynamic password with long string.
-  /*var randomLongStringPassword = ''
-  var characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  var charactersLength = characters.length
-  for (var i = 0; i < 20; i++) {
-    randomLongStringPassword += characters.charAt(
-      Math.floor(Math.random() * charactersLength),
-    )
-  }*/
-  const username = uuid_string;
-  const password = uuid_string;
-  setDebugInfo("Username: " + username);
-  setDebugInfo("password: " + password);
-  window.localStorage.setItem("correlated_username", username);
-  window.localStorage.setItem("correlated_password", password);
+  //username = 12 character
+  var randomLongStringPassword = ''
+    var characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    var charactersLength = characters.length
+    for (var i = 0; i < 20; i++) {
+      randomLongStringPassword += characters.charAt(
+        Math.floor(Math.random() * charactersLength),
+      )
+     }
+  var createUserName = ""
+  var userNameCharacter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  var userNameCharacterLength = userNameCharacter.length
+  for(var i = 0; i < 12; i++) {
+  createUserName += userNameCharacter.charAt(Math.floor(Math.random() * userNameCharacterLength))
+  }
+  setDebugInfo("Username: " + createUserName);
+  setDebugInfo("password: " + randomLongStringPassword);
+  window.localStorage.setItem("correlated_username", createUserName);
+  window.localStorage.setItem("correlated_password", randomLongStringPassword);
   const createUserOptions = {
     method: "post",
     data: {
       email: uuid_string + "@example.com",
-      username: uuid_string,
-      password: password,
+      username: createUserName,
+      password: randomLongStringPassword,
       first_name: uuid_string,
       last_name: uuid_string,
     },
@@ -260,21 +272,25 @@ async function createNewUser() {
       },
       function (response) {
         //User already exists in the database. This function handle error in create new user.
-        setDebugInfo(JSON.stringify(response.message));
-        for (const key in response) {
-          setDebugInfo(
-            JSON.stringify(key) + response[key] + "Response in the error code"
-          );
+        let userExistError = {}
+        try {
+          userExistError = JSON.parse(response.error)
+        } catch (error) {
+        setDebugInfo(error )
         }
-        if (response) {
-          return createAndStoreNewToken(username, password);
+        if (userExistError.message === 'User with the same username already exists.') {
+          return LoadLostLocalStorageData(username, password);
         }
         resolve(false);
-        setDebugInfo("Error in createNewUser", +response.status);
+        setDebugInfo("Error in createNewUser", + response.status);
       }
     );
   });
-  setDebugInfo("Bye from createNewUser");
+}
+
+async function LoadLostLocalStorageData(username, password) {
+  await createAndStoreNewToken(username, password)
+  await localDirectLoginTokenIsValid()
 }
 
 /** The token is stored in local memory after generation. */
@@ -298,12 +314,12 @@ async function createAndStoreNewToken(username, password) {
   cordova.plugin.http.setHeader(
     "DirectLogin",
     'username="' +
-      username +
-      '", password="' +
-      password +
-      '",consumer_key="' +
-      consumer_key +
-      '"'
+    username +
+    '", password="' +
+    password +
+    '",consumer_key="' +
+    consumer_key +
+    '"'
   );
   cordova.plugin.http.setHeader("Content-Type", "application/json ");
   //Create the post request, leave the body and header section empty as it was defined above.
@@ -326,8 +342,6 @@ async function createAndStoreNewToken(username, password) {
       }
     );
   });
-
-  setDebugInfo("Bye from createAndStoreNewToken");
 }
 
 /** In this function, call the endpoint for User Attributes. */
@@ -372,7 +386,8 @@ async function getDeviceContactsCount() {
     }
   });
 }
-
+//checkReadContactPermission:: it should true and false based on the result post user attribute.
+//checkReadBatteryPermission::
 /** This function Check Android Permission. */
 async function checkFilePermission() {
   return new Promise((resolve, reject) => {
@@ -386,14 +401,15 @@ async function checkFilePermission() {
             permissions.READ_CONTACTS,
             function (status) {
               setDebugInfo(
-                "success requesting READ_CONTACTS permission" +
-                  JSON.stringify(status)
+                "success requesting READ_CONTACTS permission" + typeof status.hasPermission +
+                JSON.stringify(status)
               );
-              openSofit(getCorrelatedUserId());
+             resolve(status.hasPermission = true);
+             setDebugInfo('hasPermission is true' +  JSON.stringify(status))
             },
             function (err) {
               setDebugInfo("Failed to set permission");
-              reject(err);
+              resolve(false);
             }
           );
         } else {
@@ -403,7 +419,7 @@ async function checkFilePermission() {
       },
       function (err) {
         setDebugInfo(err);
-        resolve(true);
+        resolve(false);
       }
     );
   });
