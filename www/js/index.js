@@ -79,7 +79,7 @@ async function onDeviceReady() {
     }
   }
 
-  await checkFilePermission();
+  await checkContactPermission();
 
   postUserAttribute(
     "DEVICE_CONTACT_COUNT",
@@ -89,11 +89,12 @@ async function onDeviceReady() {
 
   await postBatteryLevelPeriodically();
 
-  openSofit(getCorrelatedUserId());
+
   setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
   setDebugInfo("getCorrelatedPassword is: " + getCorrelatedPassword());
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
+  openSofit(getCorrelatedUserId());
   setDebugInfo("bye from onDeviceReady ");
 }
 
@@ -149,7 +150,7 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
 }
 
 //Set the Header parameter for the Post request
-function directLoginTokenHeader() {
+function setHeaders() {
   cordova.plugin.http.setHeader(
     "DirectLogin",
     `token=${window.localStorage.getItem("direct_login_token")}`
@@ -166,7 +167,7 @@ async function localDirectLoginTokenIsValid() {
   setDebugInfo("Hello from localDirectLoginTokenIsValid");
   cordova.plugin.http.setDataSerializer("json");
   //Set the Header parameter for the Post request
-  directLoginTokenHeader();
+  setHeaders();
   //Post request create, leave body and header section empty because defined above
   return new Promise((resolve) => {
     cordova.plugin.http.get(
@@ -174,27 +175,30 @@ async function localDirectLoginTokenIsValid() {
       {},
       {},
       function (response) {
-        let userid = {}
+        let userid = {};
         try {
-          userid = JSON.parse(response.data)
-        } catch (error) {
+          userid = JSON.parse(response.data);
+        } catch (error) {}
+        setDebugInfo(
+          "directLoginTokenExistsLocally will return true: " +
+            JSON.stringify(userid.user_id)
+        );
 
-        }
-        setDebugInfo("directLoginTokenExistsLocally will return true: " + JSON.stringify(userid.user_id));
-
-          window.localStorage.setItem("correlated_user_id",userid.user_id);
+        window.localStorage.setItem("correlated_user_id", userid.user_id);
         resolve(true);
       },
       function (response) {
         for (const key in response) {
           setDebugInfo(key + response[key]);
         }
-        setDebugInfo("directLoginTokenExistsLocally will return false" + JSON.stringify(response));
+        setDebugInfo(
+          "directLoginTokenExistsLocally will return false" +
+            JSON.stringify(response)
+        );
         resolve(false);
       }
     );
   });
-
 }
 
 /** This function checks whether the token is exists in local local storage or not. If the token is present, the endpoint is called and the current login user is returned. */
@@ -220,21 +224,23 @@ async function createNewUser() {
   setDebugInfo("Hello from createNewUser");
   // get unique id to create user : uuid
   const uuid_string = device.uuid;
-  //username = 12 character
-  var randomLongStringPassword = ''
-    var characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    var charactersLength = characters.length
-    for (var i = 0; i < 20; i++) {
-      randomLongStringPassword += characters.charAt(
-        Math.floor(Math.random() * charactersLength),
-      )
-     }
-  var createUserName = ""
-  var userNameCharacter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-  var userNameCharacterLength = userNameCharacter.length
-  for(var i = 0; i < 12; i++) {
-  createUserName += userNameCharacter.charAt(Math.floor(Math.random() * userNameCharacterLength))
+  var randomLongStringPassword = "";
+  var characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var charactersLength = characters.length;
+  for (var i = 0; i < 20; i++) {
+    randomLongStringPassword += characters.charAt(
+      Math.floor(Math.random() * charactersLength)
+    );
+  }
+  var createUserName = "";
+  var userNameCharacter =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  var userNameCharacterLength = userNameCharacter.length;
+  for (var i = 0; i < 12; i++) {
+    createUserName += userNameCharacter.charAt(
+      Math.floor(Math.random() * userNameCharacterLength)
+    );
   }
   setDebugInfo("Username: " + createUserName);
   setDebugInfo("password: " + randomLongStringPassword);
@@ -272,25 +278,28 @@ async function createNewUser() {
       },
       function (response) {
         //User already exists in the database. This function handle error in create new user.
-        let userExistError = {}
+        let userExistError = {};
         try {
-          userExistError = JSON.parse(response.error)
+          userExistError = JSON.parse(response.error);
         } catch (error) {
-        setDebugInfo(error )
+          setDebugInfo(error);
         }
-        if (userExistError.message === 'User with the same username already exists.') {
+        if (
+          userExistError.message ===
+          "User with the same username already exists."
+        ) {
           return LoadLostLocalStorageData(username, password);
         }
         resolve(false);
-        setDebugInfo("Error in createNewUser", + response.status);
+        setDebugInfo("Error in createNewUser", +response.status);
       }
     );
   });
 }
 
 async function LoadLostLocalStorageData(username, password) {
-  await createAndStoreNewToken(username, password)
-  await localDirectLoginTokenIsValid()
+  await createAndStoreNewToken(username, password);
+  await localDirectLoginTokenIsValid();
 }
 
 /** The token is stored in local memory after generation. */
@@ -314,12 +323,12 @@ async function createAndStoreNewToken(username, password) {
   cordova.plugin.http.setHeader(
     "DirectLogin",
     'username="' +
-    username +
-    '", password="' +
-    password +
-    '",consumer_key="' +
-    consumer_key +
-    '"'
+      username +
+      '", password="' +
+      password +
+      '",consumer_key="' +
+      consumer_key +
+      '"'
   );
   cordova.plugin.http.setHeader("Content-Type", "application/json ");
   //Create the post request, leave the body and header section empty as it was defined above.
@@ -350,7 +359,7 @@ function postUserAttribute(key, type, value) {
   setDebugInfo(`Value from parameters ${key}, ${type}, ${value} `);
   cordova.plugin.http.setDataSerializer("json");
   //Set the Header parameter for the Post request
-  directLoginTokenHeader();
+  setHeaders();
   //Post request create, leave body and header section empty because defined above
   cordova.plugin.http.post(
     `${OBP_API_HOST}/obp/v4.0.0/my/user/attributes`,
@@ -386,10 +395,11 @@ async function getDeviceContactsCount() {
     }
   });
 }
+
 //checkReadContactPermission:: it should true and false based on the result post user attribute.
 //checkReadBatteryPermission::
 /** This function Check Android Permission. */
-async function checkFilePermission() {
+async function checkContactPermission() {
   return new Promise((resolve, reject) => {
     let permissions = cordova.plugins.permissions;
     permissions.checkPermission(
@@ -401,11 +411,10 @@ async function checkFilePermission() {
             permissions.READ_CONTACTS,
             function (status) {
               setDebugInfo(
-                "success requesting READ_CONTACTS permission" + typeof status.hasPermission +
-                JSON.stringify(status)
+                "success requesting READ_CONTACTS permission" +
+                  JSON.stringify(status)
               );
-             resolve(status.hasPermission = true);
-             setDebugInfo('hasPermission is true' +  JSON.stringify(status))
+              resolve((status.hasPermission = true));
             },
             function (err) {
               setDebugInfo("Failed to set permission");
@@ -419,7 +428,7 @@ async function checkFilePermission() {
       },
       function (err) {
         setDebugInfo(err);
-        resolve(false);
+        resolve(true);
       }
     );
   });
