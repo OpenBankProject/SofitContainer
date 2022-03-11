@@ -30,7 +30,7 @@ const SOFIT_HOST = "https://includimi-sofit.tesobe.com";
 const OBP_API_HOST = "https://includimi.tesobe.com";
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000;
-
+var hasContactPermission;
 
 /** This is a debug function, for finding error. */
 function setDebugInfo(text) {
@@ -80,8 +80,14 @@ async function onDeviceReady() {
     }
   }
 
+//CONVERT RESULT IN INTERGER 0 FOR FALSE AND 1 FOR TRUE
+//  postUserAttribute(
+//     "DEVICE_CONTACT_PERMISSION_STATUS",
+//     "INTEGER",
+//     await getContactPermissionStatus()
+//   );
+
 var haspermission = await getContactPermissionStatus()
-setDebugInfo(" Has permissions will be: " + haspermission)
 
   if(haspermission) {
     postUserAttribute(
@@ -91,6 +97,7 @@ setDebugInfo(" Has permissions will be: " + haspermission)
     );
   }
 
+
   await postBatteryLevelPeriodically();
 
   setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
@@ -98,7 +105,7 @@ setDebugInfo(" Has permissions will be: " + haspermission)
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
 
-  openSofit(getCorrelatedUserId());
+  //openSofit(getCorrelatedUserId());
 
   setDebugInfo("Bye from onDeviceReady ");
 }
@@ -385,18 +392,59 @@ function postUserAttribute(key, type, value) {
 
 /** This function will get contact list from phone and pass as value in postUserAttribute function. */
 async function getDeviceContactsCount() {
+  // In this case error code block will be run, because of this, will not affect on other functions.
   setDebugInfo("Hello from getDeviceContact");
   return new Promise((resolve) => {
+
         navigator.contactsPhoneNumbers.list(function (contacts) {
+
           total_count = contacts.length;
           resolve(total_count);
-        
+
       });
   });
 }
+
 /** This function Check Android Permission. */
+/*async function checkContactPermission() {
+  setDebugInfo("Hello from checkContactPermission");
+  return new Promise((resolve, reject) => {
+    var permissions = cordova.plugins.permissions;
+    permissions.checkPermission(
+      permissions.READ_CONTACTS,
+      //This is a successCallBack
+      function (status) {
+        setDebugInfo("Checking permission status" + JSON.stringify(status));
+        if (!status.hasPermission) {
+          permissions.requestPermission(
+            permissions.READ_CONTACTS,
+            function (status) {
+              setDebugInfo(
+                "success requesting READ_CONTACTS permission" +
+                  JSON.stringify(status)
+              );
+              resolve((status.hasPermission));
+            },
+            function (err) {
+              setDebugInfo("Failed to set permission");
+              resolve(false);
+            }
+          );
+        } else {
+          setDebugInfo("Permission already exist" + JSON.stringify(status));
+          resolve(true);
+        }
+      },
+      function (err) {
+        setDebugInfo(err);
+        resolve(true);
+      }
+    );
+  });
+  setDebugInfo("Bye from checkContactPermission");
+}*/
+
 async function getContactPermissionStatus() {
-setDebugInfo("Hello from getContactPermissionStatus")
   return new Promise((resolve) => {
     var permissions = cordova.plugins.permissions;
     permissions.requestPermission(
@@ -414,7 +462,6 @@ setDebugInfo("Hello from getContactPermissionStatus")
       }
     );
   });
-  setDebugInfo("Bye from getContactPermissionStatus")
 }
 
 /** This function will return the device battery level. */
