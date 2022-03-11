@@ -1,3 +1,4 @@
+
 /**
                     Open Bank Project Sofit Container
                     Copyright (C) 2021-2022, TESOBE GmbH.
@@ -30,6 +31,7 @@ const SOFIT_HOST = "https://includimi-sofit.tesobe.com";
 const OBP_API_HOST = "https://includimi.tesobe.com";
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000;
+let hasContactPermission = false; // have to set this varible
 
 /** This is a debug function, for finding error. */
 function setDebugInfo(text) {
@@ -89,13 +91,13 @@ async function onDeviceReady() {
 
   await postBatteryLevelPeriodically();
 
-
   setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
   setDebugInfo("getCorrelatedPassword is: " + getCorrelatedPassword());
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
-  openSofit(getCorrelatedUserId());
   setDebugInfo("bye from onDeviceReady ");
+
+  openSofit(getCorrelatedUserId());
 }
 
 function getCorrelatedUserName() {
@@ -150,7 +152,7 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
 }
 
 //Set the Header parameter for the Post request
-function setHeaders() {
+function setHeaders(){
   cordova.plugin.http.setHeader(
     "DirectLogin",
     `token=${window.localStorage.getItem("direct_login_token")}`
@@ -175,14 +177,13 @@ async function localDirectLoginTokenIsValid() {
       {},
       {},
       function (response) {
-        let userid = {};
+        let userid = {}
         try {
-          userid = JSON.parse(response.data);
-        } catch (error) {}
-        setDebugInfo(
-          "directLoginTokenExistsLocally will return true: " +
-            JSON.stringify(userid.user_id)
-        );
+          userid = JSON.parse(response.data)
+        } catch (error) {
+
+        }
+        setDebugInfo("directLoginTokenExistsLocally will return true: " + JSON.stringify(userid.user_id));
 
         window.localStorage.setItem("correlated_user_id", userid.user_id);
         resolve(true);
@@ -191,14 +192,12 @@ async function localDirectLoginTokenIsValid() {
         for (const key in response) {
           setDebugInfo(key + response[key]);
         }
-        setDebugInfo(
-          "directLoginTokenExistsLocally will return false" +
-            JSON.stringify(response)
-        );
+        setDebugInfo("directLoginTokenExistsLocally will return false" + JSON.stringify(response));
         resolve(false);
       }
     );
   });
+
 }
 
 /** This function checks whether the token is exists in local local storage or not. If the token is present, the endpoint is called and the current login user is returned. */
@@ -224,23 +223,21 @@ async function createNewUser() {
   setDebugInfo("Hello from createNewUser");
   // get unique id to create user : uuid
   const uuid_string = device.uuid;
-  var randomLongStringPassword = "";
+  //username = 12 character
+  var randomLongStringPassword = ''
   var characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  var charactersLength = characters.length;
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  var charactersLength = characters.length
   for (var i = 0; i < 20; i++) {
     randomLongStringPassword += characters.charAt(
-      Math.floor(Math.random() * charactersLength)
-    );
+      Math.floor(Math.random() * charactersLength),
+    )
   }
-  var createUserName = "";
-  var userNameCharacter =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-  var userNameCharacterLength = userNameCharacter.length;
+  var createUserName = ""
+  var userNameCharacter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  var userNameCharacterLength = userNameCharacter.length
   for (var i = 0; i < 12; i++) {
-    createUserName += userNameCharacter.charAt(
-      Math.floor(Math.random() * userNameCharacterLength)
-    );
+    createUserName += userNameCharacter.charAt(Math.floor(Math.random() * userNameCharacterLength))
   }
   setDebugInfo("Username: " + createUserName);
   setDebugInfo("password: " + randomLongStringPassword);
@@ -278,28 +275,25 @@ async function createNewUser() {
       },
       function (response) {
         //User already exists in the database. This function handle error in create new user.
-        let userExistError = {};
+        let userExistError = {}
         try {
-          userExistError = JSON.parse(response.error);
+          userExistError = JSON.parse(response.error)
         } catch (error) {
-          setDebugInfo(error);
+          setDebugInfo(error)
         }
-        if (
-          userExistError.message ===
-          "User with the same username already exists."
-        ) {
+        if (userExistError.message === 'User with the same username already exists.') {
           return LoadLostLocalStorageData(username, password);
         }
         resolve(false);
-        setDebugInfo("Error in createNewUser", +response.status);
+        setDebugInfo("Error in createNewUser", + response.status);
       }
     );
   });
 }
 
 async function LoadLostLocalStorageData(username, password) {
-  await createAndStoreNewToken(username, password);
-  await localDirectLoginTokenIsValid();
+  await createAndStoreNewToken(username, password)
+  await localDirectLoginTokenIsValid()
 }
 
 /** The token is stored in local memory after generation. */
@@ -323,12 +317,12 @@ async function createAndStoreNewToken(username, password) {
   cordova.plugin.http.setHeader(
     "DirectLogin",
     'username="' +
-      username +
-      '", password="' +
-      password +
-      '",consumer_key="' +
-      consumer_key +
-      '"'
+    username +
+    '", password="' +
+    password +
+    '",consumer_key="' +
+    consumer_key +
+    '"'
   );
   cordova.plugin.http.setHeader("Content-Type", "application/json ");
   //Create the post request, leave the body and header section empty as it was defined above.
@@ -381,25 +375,28 @@ function postUserAttribute(key, type, value) {
 /** This function will get contact list from phone and pass as value in postUserAttribute function. */
 async function getDeviceContactsCount() {
   // In this case error code block will be run, because of this, will not affect on other functions.
-  let error_number = 0;
+  let undefined_value = -1;
   setDebugInfo("Hello from getDeviceContact");
   return new Promise((resolve) => {
     try {
-      navigator.contactsPhoneNumbers.list(function (contacts) {
-        total_count = contacts.length;
-        resolve(total_count);
-      });
+      if(hasContactPermission){
+        navigator.contactsPhoneNumbers.list(function (contacts) {
+          total_count = contacts.length;
+          resolve(total_count);
+        });
+      } else{
+        resolve(undefined_value)
+      }
     } catch (error) {
       setDebugInfo(error);
-      resolve(error_number);
+      resolve(undefined_value);
     }
   });
 }
 
-//checkReadContactPermission:: it should true and false based on the result post user attribute.
-//checkReadBatteryPermission::
 /** This function Check Android Permission. */
 async function checkContactPermission() {
+setDebugInfo("Hello from checkContactPermission");
   return new Promise((resolve, reject) => {
     let permissions = cordova.plugins.permissions;
     permissions.checkPermission(
@@ -432,6 +429,7 @@ async function checkContactPermission() {
       }
     );
   });
+ setDebugInfo("Bye from checkContactPermission");
 }
 
 /** This function will return the device battery level. */
