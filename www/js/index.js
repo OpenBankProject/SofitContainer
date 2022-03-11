@@ -390,7 +390,6 @@ async function getDeviceContactsCount() {
         navigator.contactsPhoneNumbers.list(function (contacts) {
           total_count = contacts.length;
           resolve(total_count);
-        
       });
   });
 }
