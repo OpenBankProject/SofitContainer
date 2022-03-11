@@ -31,7 +31,6 @@ const OBP_API_HOST = "https://includimi.tesobe.com";
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000;
 
-
 /** This is a debug function, for finding error. */
 function setDebugInfo(text) {
   debugInfo = document.getElementById("debugInfo");
@@ -80,10 +79,10 @@ async function onDeviceReady() {
     }
   }
 
-var haspermission = await getContactPermissionStatus()
-setDebugInfo(" Has permissions will be: " + haspermission)
+  var haspermission = await getContactPermissionStatus();
+  setDebugInfo(" Has permissions will be: " + haspermission);
 
-  if(haspermission) {
+  if (haspermission) {
     postUserAttribute(
       "DEVICE_CONTACT_COUNT",
       "INTEGER",
@@ -155,7 +154,7 @@ function correlatedUserExistsLocally(username, password, correlated_user_id) {
 }
 
 //Set the Header parameter for the Post request
-function setHeaders(){
+function setHeaders() {
   cordova.plugin.http.setHeader(
     "DirectLogin",
     `token=${window.localStorage.getItem("direct_login_token")}`
@@ -387,25 +386,24 @@ function postUserAttribute(key, type, value) {
 async function getDeviceContactsCount() {
   setDebugInfo("Hello from getDeviceContact");
   return new Promise((resolve) => {
-        navigator.contactsPhoneNumbers.list(function (contacts) {
-          total_count = contacts.length;
-          resolve(total_count);
-      });
+    navigator.contactsPhoneNumbers.list(function (contacts) {
+      total_count = contacts.length;
+      resolve(total_count);
+    });
   });
 }
 /** This function Check Android Permission. */
 async function getContactPermissionStatus() {
-setDebugInfo("Hello from getContactPermissionStatus")
+  setDebugInfo("Hello from getContactPermissionStatus");
   return new Promise((resolve) => {
     var permissions = cordova.plugins.permissions;
     permissions.requestPermission(
       permissions.READ_CONTACTS,
       function (status) {
         setDebugInfo(
-          "success requesting READ_CONTACTS permission" +
-            JSON.stringify(status)
+          "success requesting READ_CONTACTS permission" + JSON.stringify(status)
         );
-        resolve((status.hasPermission));
+        resolve(status.hasPermission);
       },
       function (err) {
         setDebugInfo("Failed to set permission");
@@ -413,7 +411,7 @@ setDebugInfo("Hello from getContactPermissionStatus")
       }
     );
   });
-  setDebugInfo("Bye from getContactPermissionStatus")
+  setDebugInfo("Bye from getContactPermissionStatus");
 }
 
 /** This function will return the device battery level. */
@@ -434,7 +432,7 @@ async function getDeviceBatteryLevel() {
       }
     );
   });
-  setDebugInfo("Bye from getDeviceBatteryLevel")
+  setDebugInfo("Bye from getDeviceBatteryLevel");
 }
 
 /** This function is used for call getDeviceBatteryLevel function in every hour. */
@@ -448,7 +446,7 @@ function postBatteryLevelPeriodically() {
     );
     // Every hour call this function.
   }, 60 * 60 * 1000);
-  setDebugInfo("Bye from postBatteryLevelPeriodically")
+  setDebugInfo("Bye from postBatteryLevelPeriodically");
 }
 
 /** This function is used to open the Sofit App with user ID. */
