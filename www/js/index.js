@@ -275,7 +275,7 @@ async function createNewUser() {
           resolve(true);
         } else {
           resolve(false);
-          setDebugInfo("Status is : ", +response.status);
+          setDebugInfo("Status is : ", + response.status);
         }
       },
       function (response) {
@@ -289,7 +289,7 @@ async function createNewUser() {
           createAndStoreNewToken(username, password);
         }
         resolve(false);
-        setDebugInfo("Error in createNewUser", +response.status);
+        setDebugInfo("Error in createNewUser", + response.status);
       }
     );
   });
