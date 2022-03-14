@@ -212,6 +212,19 @@ async function createNewUser() {
   setDebugInfo("Hello from createNewUser");
   // get unique id to create user : uuid
   const uuid_string = device.uuid;
+
+  //create a random username.
+  var createUserName = "";
+  var userNameCharacter =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  var userNameCharacterLength = userNameCharacter.length;
+  for (var i = 0; i < 12; i++) {
+      createUserName += userNameCharacter.charAt(
+        Math.floor(Math.random() * userNameCharacterLength)
+      );
+    }
+
+  //create a random password.
   var randomLongStringPassword = "";
   var characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -219,15 +232,6 @@ async function createNewUser() {
   for (var i = 0; i < 20; i++) {
     randomLongStringPassword += characters.charAt(
       Math.floor(Math.random() * charactersLength)
-    );
-  }
-  var createUserName = "";
-  var userNameCharacter =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-  var userNameCharacterLength = userNameCharacter.length;
-  for (var i = 0; i < 12; i++) {
-    createUserName += userNameCharacter.charAt(
-      Math.floor(Math.random() * userNameCharacterLength)
     );
   }
   setDebugInfo("Username: " + createUserName);
