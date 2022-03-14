@@ -61,9 +61,9 @@ async function onDeviceReady() {
     ) {
       // No need to create User
       // Just create a new Token. (In the future we can also check if the User is valid i.e. not locked etc.)
-      setDebugInfo("before createAndStoreNewToken");
+      setDebugInfo("Before createAndStoreNewToken");
       createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword());
-      setDebugInfo("after createAndStoreNewToken");
+      setDebugInfo("After createAndStoreNewToken");
     } else {
       if (await createNewUser()) {
         setDebugInfo("Before createAndStoreNewToken ");
@@ -79,23 +79,27 @@ async function onDeviceReady() {
     }
   }
 
-  await checkContactPermission();
+  var haspermission = await getContactPermissionStatus();
+  setDebugInfo(" Has permissions will be: " + haspermission);
 
-  postUserAttribute(
-    "DEVICE_CONTACT_COUNT",
-    "INTEGER",
-    await getDeviceContactsCount()
-  );
+  if (haspermission) {
+    postUserAttribute(
+      "DEVICE_CONTACT_COUNT",
+      "INTEGER",
+      await getDeviceContactsCount()
+    );
+  }
 
   await postBatteryLevelPeriodically();
-
 
   setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
   setDebugInfo("getCorrelatedPassword is: " + getCorrelatedPassword());
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
+
   openSofit(getCorrelatedUserId());
-  setDebugInfo("bye from onDeviceReady ");
+
+  setDebugInfo("Bye from onDeviceReady ");
 }
 
 function getCorrelatedUserName() {
@@ -183,7 +187,6 @@ async function localDirectLoginTokenIsValid() {
           "directLoginTokenExistsLocally will return true: " +
             JSON.stringify(userid.user_id)
         );
-
         window.localStorage.setItem("correlated_user_id", userid.user_id);
         resolve(true);
       },
@@ -273,7 +276,7 @@ async function createNewUser() {
           resolve(true);
         } else {
           resolve(false);
-          setDebugInfo("Status is : ", +response.status);
+          setDebugInfo("Status is : ", + response.status);
         }
       },
       function (response) {
@@ -291,12 +294,13 @@ async function createNewUser() {
           return LoadLostLocalStorageData(username, password);
         }
         resolve(false);
-        setDebugInfo("Error in createNewUser", +response.status);
+        setDebugInfo("Error in createNewUser", + response.status);
       }
     );
   });
 }
 
+/** This function load username and password, when reinstall app.*/
 async function LoadLostLocalStorageData(username, password) {
   await createAndStoreNewToken(username, password);
   await localDirectLoginTokenIsValid();
@@ -347,7 +351,7 @@ async function createAndStoreNewToken(username, password) {
       },
       function (response) {
         resolve(false);
-        setDebugInfo("Error in createAndStoreNewToken", +response.status);
+        setDebugInfo("Error in createAndStoreNewToken", + response.status);
       }
     );
   });
@@ -356,7 +360,7 @@ async function createAndStoreNewToken(username, password) {
 /** In this function, call the endpoint for User Attributes. */
 function postUserAttribute(key, type, value) {
   setDebugInfo("Hello from postUserAttribute");
-  setDebugInfo(`Value from parameters ${key}, ${type}, ${value} `);
+  setDebugInfo(`Value from parameters ${key}, ${type}, ${value}`);
   cordova.plugin.http.setDataSerializer("json");
   //Set the Header parameter for the Post request
   setHeaders();
@@ -380,58 +384,34 @@ function postUserAttribute(key, type, value) {
 
 /** This function will get contact list from phone and pass as value in postUserAttribute function. */
 async function getDeviceContactsCount() {
-  // In this case error code block will be run, because of this, will not affect on other functions.
-  let error_number = 0;
   setDebugInfo("Hello from getDeviceContact");
   return new Promise((resolve) => {
-    try {
-      navigator.contactsPhoneNumbers.list(function (contacts) {
-        total_count = contacts.length;
-        resolve(total_count);
-      });
-    } catch (error) {
-      setDebugInfo(error);
-      resolve(error_number);
-    }
+    navigator.contactsPhoneNumbers.list(function (contacts) {
+      total_count = contacts.length;
+      resolve(total_count);
+    });
   });
 }
-
-//checkReadContactPermission:: it should true and false based on the result post user attribute.
-//checkReadBatteryPermission::
 /** This function Check Android Permission. */
-async function checkContactPermission() {
-  return new Promise((resolve, reject) => {
-    let permissions = cordova.plugins.permissions;
-    permissions.checkPermission(
+async function getContactPermissionStatus() {
+  setDebugInfo("Hello from getContactPermissionStatus");
+  return new Promise((resolve) => {
+    var permissions = cordova.plugins.permissions;
+    permissions.requestPermission(
       permissions.READ_CONTACTS,
       function (status) {
-        setDebugInfo("success checking permission");
-        if (!status.hasPermission) {
-          permissions.requestPermission(
-            permissions.READ_CONTACTS,
-            function (status) {
-              setDebugInfo(
-                "success requesting READ_CONTACTS permission" +
-                  JSON.stringify(status)
-              );
-              resolve((status.hasPermission = true));
-            },
-            function (err) {
-              setDebugInfo("Failed to set permission");
-              resolve(false);
-            }
-          );
-        } else {
-          setDebugInfo("Permission already exist" + JSON.stringify(status));
-          resolve(true);
-        }
+        setDebugInfo(
+          "success requesting READ_CONTACTS permission" + JSON.stringify(status)
+        );
+        resolve(status.hasPermission);
       },
       function (err) {
-        setDebugInfo(err);
-        resolve(true);
+        setDebugInfo("Failed to set permission");
+        resolve(false);
       }
     );
   });
+  setDebugInfo("Bye from getContactPermissionStatus");
 }
 
 /** This function will return the device battery level. */
@@ -452,6 +432,7 @@ async function getDeviceBatteryLevel() {
       }
     );
   });
+  setDebugInfo("Bye from getDeviceBatteryLevel");
 }
 
 /** This function is used for call getDeviceBatteryLevel function in every hour. */
@@ -465,6 +446,7 @@ function postBatteryLevelPeriodically() {
     );
     // Every hour call this function.
   }, 60 * 60 * 1000);
+  setDebugInfo("Bye from postBatteryLevelPeriodically");
 }
 
 /** This function is used to open the Sofit App with user ID. */
