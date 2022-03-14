@@ -43,35 +43,27 @@ async function onDeviceReady() {
   //let correlated_username = window.localStorage.getItem('username')
   //let correlated_password = window.localStorage.getItem('password')
   //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
-  if (
-    directLoginTokenExistsLocally() &&
-    directLoginTokenIsFresh() &&
-    (await localDirectLoginTokenIsValid())
-  ) {
+
+  //Check we have an existing valid token.
+  if (directLoginTokenExistsLocally() && directLoginTokenIsFresh() && (await localDirectLoginTokenIsValid())) {
     // No need to get Direct Login Token.
     setDebugInfo("All good");
   } else {
+    //No valid token
     setDebugInfo("no token");
-    if (
-      correlatedUserExistsLocally(
-        getCorrelatedUserName(),
-        getCorrelatedPassword(),
-        getCorrelatedUserId()
-      )
-    ) {
+    //Check if we have a local user.
+    if (correlatedUserExistsLocally(getCorrelatedUserName(), getCorrelatedPassword(), getCorrelatedUserId())) {
       // No need to create User
       // Just create a new Token. (In the future we can also check if the User is valid i.e. not locked etc.)
       setDebugInfo("Before createAndStoreNewToken");
       createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword());
       setDebugInfo("After createAndStoreNewToken");
     } else {
+      //No local user. Therefore create new user.
       if (await createNewUser()) {
         setDebugInfo("Before createAndStoreNewToken ");
         // if user_id does not exist in local storage that means user has not register or new user then call function create new user().
-        await createAndStoreNewToken(
-          getCorrelatedUserName(),
-          getCorrelatedPassword()
-        );
+        await createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword());
         setDebugInfo("After createAndStoreNewToken");
       } else {
         return "error";
@@ -80,19 +72,20 @@ async function onDeviceReady() {
   }
 
   //want to get the value resolved from getContactPermissionStatus.
-  var haspermission = await getContactPermissionStatus();
-  var permissionInteger = haspermission === true ? 1 : 0;
-  setDebugInfo("Has permissions will be: " + haspermission);
+  //This will calls the permission to dialogue box to pop up.
+  var hasContactPermission = await getContactPermissionStatus();
+  var hasContactPermissionInteger = hasContactPermission === true ? 1 : 0;
+  setDebugInfo("Has permissions will be: " + hasContactPermissionInteger);
 
   //It will call the API in postUserAttribute function for getContactPermissionStatus function.
   postUserAttribute(
     "DEVICE_CONTACT_PERMISSION_STATUS",
     "INTEGER",
-    permissionInteger
+    hasContactPermissionInteger
   );
 
   //It will call the API in postUserAttribute function for getDeviceContactsCount function.
-  if (permissionInteger == 1) {
+  if (hasContactPermissionInteger == 1) {
     postUserAttribute(
       "DEVICE_CONTACT_COUNT",
       "INTEGER",
@@ -136,9 +129,7 @@ function getDirectLoginToken() {
            - It will return  boolean value - if token tokenDuration is less than token date, then it will return true. */
 function directLoginTokenIsFresh() {
   setDebugInfo("Hello from directLoginTokenIsFresh");
-  let date_token_generated = window.localStorage.getItem(
-    "date_token_generated"
-  );
+  let date_token_generated = window.localStorage.getItem("date_token_generated");
   let tokenDuration = date_token_generated + token_life;
   let today_date = new Date().getTime();
   return tokenDuration < today_date;
@@ -173,7 +164,7 @@ function setHeaders() {
 }
 
 /** This function checks if the token is valid or not.
-          GUARD: 1.  Two options are available for checking the token validation.
+          CHECK: 1.  Two options are available for checking the token validation.
                       -The token should be present or expired in the local storage.
                       -Generation of the token by an invalid user.
                 2. If the token is valid, call the API to get the current login user. */
@@ -182,17 +173,19 @@ async function localDirectLoginTokenIsValid() {
   cordova.plugin.http.setDataSerializer("json");
   //Set the Header parameter for the Post request
   setHeaders();
-  //Post request create, leave body and header section empty because defined above
+  //We can test, if the token is valid by using it (This call just get the current user).
   return new Promise((resolve) => {
     cordova.plugin.http.get(
       `${OBP_API_HOST}/obp/v4.0.0/users/current`,
       {},
       {},
+      //This is success case. TODO: Check status code == 200
       function (response) {
         setDebugInfo("directLoginTokenExistsLocally will return true");
         resolve(true);
       },
       function (response) {
+        //This is just for debug information.
         for (const key in response) {
           setDebugInfo(key + response[key]);
         }
@@ -211,13 +204,6 @@ function directLoginTokenExistsLocally() {
   } else {
     return false;
   }
-}
-
-/** Call the function to create a new token.
-          1. call the API and return the direct login token. */
-function createNewDirectLoginToken() {
-  setDebugInfo("Hello from createNewDirectLoginToken");
-  createNewUser();
 }
 
 /** This function creates a new user.
@@ -383,11 +369,12 @@ async function getDeviceContactsCount() {
   });
 }
 
-/** This function Check Android Permission. */
+/** This function Check Android Permission. It will causes the permission dialogue to pop up.*/
 async function getContactPermissionStatus() {
   setDebugInfo("Hello from getContactPermissionStatus");
   return new Promise((resolve) => {
     var permissions = cordova.plugins.permissions;
+    // This causes the permission dialogue box to pop up.
     permissions.requestPermission(
       permissions.READ_CONTACTS,
       function (status) {
