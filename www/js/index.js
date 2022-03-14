@@ -72,7 +72,7 @@ async function onDeviceReady() {
   }
 
   //want to get the value resolved from getContactPermissionStatus.
-  //This will calls the permission to dialogue box to pop up.
+  //This will cause the permission dialogue box to pop up.
   var hasContactPermission = await getContactPermissionStatus();
   var hasContactPermissionInteger = hasContactPermission === true ? 1 : 0;
   setDebugInfo("Has permissions will be: " + hasContactPermissionInteger);
