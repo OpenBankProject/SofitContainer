@@ -19,7 +19,6 @@
                     TESOBE GmbH.
                     Osloer Strasse 16/17
                     Berlin 13359, Germany
-
                     http://www.tesobe.com
                     */
 
@@ -93,6 +92,18 @@ async function onDeviceReady() {
     );
   }
 
+  var hasBatteryPermission = await getBatteryPermissionStatus();
+  //var hasContactPermissionInteger = hasContactPermission === true ? 1 : 0;
+  setDebugInfo("Has permissions will be: " + hasBatteryPermission);
+
+  if (hasBatteryPermission) {
+       postUserAttribute(
+         "DEVICE_BATTERY_COUNT",
+         "INTEGER",
+         hasBatteryPermission
+       );
+  }
+
   await postBatteryLevelPeriodically();
 
   setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
@@ -126,7 +137,7 @@ function getDirectLoginToken() {
 }
 
 /** This function will check the validity of the token.
-           - It will return  boolean value - if token tokenDuration is less than token date, then it will return true. */
+           - It will return boolean value - if token tokenDuration is less than token date, then it will return true. */
 function directLoginTokenIsFresh() {
   setDebugInfo("Hello from directLoginTokenIsFresh");
   let date_token_generated = window.localStorage.getItem("date_token_generated");
@@ -179,10 +190,12 @@ async function localDirectLoginTokenIsValid() {
       `${OBP_API_HOST}/obp/v4.0.0/users/current`,
       {},
       {},
-      //This is success case. TODO: Check status code == 200
+      //This is success case.
       function (response) {
+        if(response.status == 200){
         setDebugInfo("directLoginTokenExistsLocally will return true");
         resolve(true);
+        }
       },
       function (response) {
         //This is just for debug information.
@@ -399,27 +412,43 @@ async function getContactPermissionStatus() {
 /** This function will return the device battery level. */
 async function getDeviceBatteryLevel() {
   setDebugInfo("Hello from getDeviceBatteryLevel");
-  return new Promise((resolve) => {
-    navigator.notification.confirm(
-      "Device Battery Level is",
-      async function () {
-        try {
-          const battery_life = await navigator.getBattery();
-          const battery_response = await battery_life.level;
-          resolve(Math.round(battery_response * 100));
-        } catch (error) {
-          setDebugInfo(error);
-          resolve(0);
-        }
-      }
-    );
-  });
+  const battery_life = await navigator.getBattery();
+  const battery_response = await battery_life.level;
+  return (Math.round(battery_response * 100));
   setDebugInfo("Bye from getDeviceBatteryLevel");
 }
 
+/** This function Check Android Permission. It will causes the permission dialogue to pop up.*/
+async function getBatteryPermissionStatus() {
+  setDebugInfo("Hello from getBatteryPermissionStatus");
+  return new Promise((resolve) => {
+    var BatteryPermissions = cordova.plugins.permissions;
+    // This causes the permission dialogue box to pop up.
+    BatteryPermissions.requestPermission(
+      BatteryPermissions.BATTERY_LEVEL,
+      function (status) {
+        setDebugInfo(
+          "success requesting BATTERY_LEVEL permission" + JSON.stringify(status)
+        );
+        resolve(status.hasPermission);
+      },
+      function (err) {
+        setDebugInfo("Failed to set permission");
+        resolve(false);
+      }
+    );
+  });
+  setDebugInfo("Bye from getBatteryPermissionStatus");
+}
+
 /** This function is used for call getDeviceBatteryLevel function in every hour. */
-function postBatteryLevelPeriodically() {
+async function postBatteryLevelPeriodically() {
   setDebugInfo("Hello from postBatteryLevelPeriodically");
+  postUserAttribute(
+    "DEVICE_BATTERY_LEVEL",
+    "INTEGER",
+    await getDeviceBatteryLevel()
+  );
   setInterval(async function () {
     postUserAttribute(
       "DEVICE_BATTERY_LEVEL",
@@ -435,7 +464,7 @@ function postBatteryLevelPeriodically() {
 function openSofit(user_id) {
   setDebugInfo("Hello from openSofit");
   window.open = cordova.InAppBrowser.open(
-    `${SOFIT_HOST}?correlated_user_id = ${user_id}`,
+    `${SOFIT_HOST}/correlated-user?correlated_user_id = ${user_id}`,
     "_blank",
     "location=no"
   );
