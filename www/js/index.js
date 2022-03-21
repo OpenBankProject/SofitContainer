@@ -47,6 +47,7 @@ async function onDeviceReady() {
   if (directLoginTokenExistsLocally() && directLoginTokenIsFresh() && (await localDirectLoginTokenIsValid())) {
     // No need to get Direct Login Token.
     setDebugInfo("All good");
+
   } else {
     //No valid token
     setDebugInfo("no token");
@@ -93,7 +94,6 @@ async function onDeviceReady() {
   }
 
   var hasBatteryPermission = await getBatteryPermissionStatus();
-  //var hasContactPermissionInteger = hasContactPermission === true ? 1 : 0;
   setDebugInfo("Has permissions will be: " + hasBatteryPermission);
 
   if (hasBatteryPermission) {
@@ -462,11 +462,13 @@ async function postBatteryLevelPeriodically() {
 
 /** This function is used to open the Sofit App with user ID. */
 function openSofit(user_id) {
-  setDebugInfo("Hello from openSofit");
-  window.open = cordova.InAppBrowser.open(
-    `${SOFIT_HOST}/correlated-user?correlated_user_id = ${user_id}`,
+  setDebugInfo("Hello from openSofit")
+   //cordova.InAppBrowser.open(`${SOFIT_HOST}?correlated_user_id=${user_id}`,
+   cordova.InAppBrowser.open(`${SOFIT_HOST}/correlated-user?correlated_user_id=${user_id}`,
     "_blank",
     "location=no"
   );
   setDebugInfo("Bye from openSofit");
 }
+
+
