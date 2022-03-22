@@ -98,7 +98,7 @@ async function onDeviceReady() {
   }
 
   var hasBatteryPermission = await getBatteryPermissionStatus();
-  setDebugInfo("Has permissions will be: " + hasBatteryPermission);
+  setDebugInfo("hasBatteryPermission is: " + hasBatteryPermission);
 
   if (hasBatteryPermission) {
        postUserAttribute(
@@ -115,7 +115,7 @@ async function onDeviceReady() {
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
 
-  //openSofit(getCorrelatedUserId());
+  openSofit(getCorrelatedUserId());
 
   setDebugInfo("Bye from onDeviceReady");
 }
