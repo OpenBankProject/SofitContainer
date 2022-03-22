@@ -39,6 +39,8 @@ function setDebugInfo(text) {
 /** For each event handler registered after the deviceready event fires has its callback function called immediately. */
 async function onDeviceReady() {
   setDebugInfo("Hello from onDeviceReady");
+  setDebugInfo(`SOFIT_HOST is: ${SOFIT_HOST}`);
+  setDebugInfo(`OBP_API_HOST is: ${OBP_API_HOST}`);
   //let correlated_username = window.localStorage.getItem('username')
   //let correlated_password = window.localStorage.getItem('password')
   //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
@@ -46,15 +48,17 @@ async function onDeviceReady() {
   //Check we have an existing valid token.
   if (directLoginTokenExistsLocally() && directLoginTokenIsFresh() && (await localDirectLoginTokenIsValid())) {
     // No need to get Direct Login Token.
-    setDebugInfo("All good");
+    setDebugInfo("All good, we have a valid direct login token");
 
   } else {
     //No valid token
-    setDebugInfo("no token");
+    setDebugInfo("No token, no direct login token found. Will try to create new token. ");
     //Check if we have a local user.
     if (correlatedUserExistsLocally(getCorrelatedUserName(), getCorrelatedPassword(), getCorrelatedUserId())) {
       // No need to create User
       // Just create a new Token. (In the future we can also check if the User is valid i.e. not locked etc.)
+      setDebugInfo("Correlated user found");
+      setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
       setDebugInfo("Before createAndStoreNewToken");
       createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword());
       setDebugInfo("After createAndStoreNewToken");
@@ -111,7 +115,7 @@ async function onDeviceReady() {
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
 
-  openSofit(getCorrelatedUserId());
+  //openSofit(getCorrelatedUserId());
 
   setDebugInfo("Bye from onDeviceReady");
 }
