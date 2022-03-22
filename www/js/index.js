@@ -19,7 +19,6 @@
                     TESOBE GmbH.
                     Osloer Strasse 16/17
                     Berlin 13359, Germany
-
                     http://www.tesobe.com
                     */
 
@@ -40,6 +39,8 @@ function setDebugInfo(text) {
 /** For each event handler registered after the deviceready event fires has its callback function called immediately. */
 async function onDeviceReady() {
   setDebugInfo("Hello from onDeviceReady");
+  setDebugInfo(`SOFIT_HOST is: ${SOFIT_HOST}`);
+  setDebugInfo(`OBP_API_HOST is: ${OBP_API_HOST}`);
   //let correlated_username = window.localStorage.getItem('username')
   //let correlated_password = window.localStorage.getItem('password')
   //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
@@ -47,14 +48,17 @@ async function onDeviceReady() {
   //Check we have an existing valid token.
   if (directLoginTokenExistsLocally() && directLoginTokenIsFresh() && (await localDirectLoginTokenIsValid())) {
     // No need to get Direct Login Token.
-    setDebugInfo("All good");
+    setDebugInfo("All good, we have a valid direct login token");
+
   } else {
     //No valid token
-    setDebugInfo("no token");
+    setDebugInfo("No token, no direct login token found. Will try to create new token. ");
     //Check if we have a local user.
     if (correlatedUserExistsLocally(getCorrelatedUserName(), getCorrelatedPassword(), getCorrelatedUserId())) {
       // No need to create User
       // Just create a new Token. (In the future we can also check if the User is valid i.e. not locked etc.)
+      setDebugInfo("Correlated user found");
+      setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
       setDebugInfo("Before createAndStoreNewToken");
       createAndStoreNewToken(getCorrelatedUserName(), getCorrelatedPassword());
       setDebugInfo("After createAndStoreNewToken");
@@ -93,6 +97,17 @@ async function onDeviceReady() {
     );
   }
 
+  var hasBatteryPermission = await getBatteryPermissionStatus();
+  setDebugInfo("hasBatteryPermission is: " + hasBatteryPermission);
+
+  if (hasBatteryPermission) {
+       postUserAttribute(
+         "DEVICE_BATTERY_COUNT",
+         "INTEGER",
+         hasBatteryPermission
+       );
+  }
+
   await postBatteryLevelPeriodically();
 
   setDebugInfo("getCorrelatedUserName is: " + getCorrelatedUserName());
@@ -126,7 +141,7 @@ function getDirectLoginToken() {
 }
 
 /** This function will check the validity of the token.
-           - It will return  boolean value - if token tokenDuration is less than token date, then it will return true. */
+           - It will return boolean value - if token tokenDuration is less than token date, then it will return true. */
 function directLoginTokenIsFresh() {
   setDebugInfo("Hello from directLoginTokenIsFresh");
   let date_token_generated = window.localStorage.getItem("date_token_generated");
@@ -179,10 +194,12 @@ async function localDirectLoginTokenIsValid() {
       `${OBP_API_HOST}/obp/v4.0.0/users/current`,
       {},
       {},
-      //This is success case. TODO: Check status code == 200
+      //This is success case.
       function (response) {
+        if(response.status == 200){
         setDebugInfo("directLoginTokenExistsLocally will return true");
         resolve(true);
+        }
       },
       function (response) {
         //This is just for debug information.
@@ -399,27 +416,43 @@ async function getContactPermissionStatus() {
 /** This function will return the device battery level. */
 async function getDeviceBatteryLevel() {
   setDebugInfo("Hello from getDeviceBatteryLevel");
-  return new Promise((resolve) => {
-    navigator.notification.confirm(
-      "Device Battery Level is",
-      async function () {
-        try {
-          const battery_life = await navigator.getBattery();
-          const battery_response = await battery_life.level;
-          resolve(Math.round(battery_response * 100));
-        } catch (error) {
-          setDebugInfo(error);
-          resolve(0);
-        }
-      }
-    );
-  });
+  const battery_life = await navigator.getBattery();
+  const battery_response = await battery_life.level;
+  return (Math.round(battery_response * 100));
   setDebugInfo("Bye from getDeviceBatteryLevel");
 }
 
+/** This function Check Android Permission. It will causes the permission dialogue to pop up.*/
+async function getBatteryPermissionStatus() {
+  setDebugInfo("Hello from getBatteryPermissionStatus");
+  return new Promise((resolve) => {
+    var BatteryPermissions = cordova.plugins.permissions;
+    // This causes the permission dialogue box to pop up.
+    BatteryPermissions.requestPermission(
+      BatteryPermissions.BATTERY_LEVEL,
+      function (status) {
+        setDebugInfo(
+          "success requesting BATTERY_LEVEL permission" + JSON.stringify(status)
+        );
+        resolve(status.hasPermission);
+      },
+      function (err) {
+        setDebugInfo("Failed to set permission");
+        resolve(false);
+      }
+    );
+  });
+  setDebugInfo("Bye from getBatteryPermissionStatus");
+}
+
 /** This function is used for call getDeviceBatteryLevel function in every hour. */
-function postBatteryLevelPeriodically() {
+async function postBatteryLevelPeriodically() {
   setDebugInfo("Hello from postBatteryLevelPeriodically");
+  postUserAttribute(
+    "DEVICE_BATTERY_LEVEL",
+    "INTEGER",
+    await getDeviceBatteryLevel()
+  );
   setInterval(async function () {
     postUserAttribute(
       "DEVICE_BATTERY_LEVEL",
@@ -433,11 +466,13 @@ function postBatteryLevelPeriodically() {
 
 /** This function is used to open the Sofit App with user ID. */
 function openSofit(user_id) {
-  setDebugInfo("Hello from openSofit");
-  window.open = cordova.InAppBrowser.open(
-    `${SOFIT_HOST}?correlated_user_id = ${user_id}`,
+  setDebugInfo("Hello from openSofit")
+   //cordova.InAppBrowser.open(`${SOFIT_HOST}?correlated_user_id=${user_id}`,
+   cordova.InAppBrowser.open(`${SOFIT_HOST}/correlated-user?correlated_user_id=${user_id}`,
     "_blank",
     "location=no"
   );
   setDebugInfo("Bye from openSofit");
 }
+
+
