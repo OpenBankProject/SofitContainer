@@ -100,6 +100,7 @@ async function onDeviceReady() {
   var hasBatteryPermission = await getBatteryPermissionStatus();
   setDebugInfo("hasBatteryPermission is: " + hasBatteryPermission);
 
+  //It will call the API in postUserAttribute function for getBatteryPermissionStatus function.
   if (hasBatteryPermission) {
        postUserAttribute(
          "DEVICE_BATTERY_COUNT",
@@ -115,8 +116,15 @@ async function onDeviceReady() {
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
 
-  openSofit(getCorrelatedUserId());
-
+   if(navigator.connection.type == 'none' || navigator.connection.type == 'unknown'){
+      navigator.notification.alert(`'Your Internet connection is ' ${navigator.connection.type}`, () => {
+        return;
+      })
+      setDebugInfo('Your Internet connection is ' + navigator.connection.type)
+      return;
+    } else {
+      openSofit(getCorrelatedUserId());
+   }
   setDebugInfo("Bye from onDeviceReady");
 }
 
@@ -474,5 +482,6 @@ function openSofit(user_id) {
   );
   setDebugInfo("Bye from openSofit");
 }
+
 
 
