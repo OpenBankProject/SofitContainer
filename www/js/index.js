@@ -116,6 +116,7 @@ async function onDeviceReady() {
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
 
+   //These lines of code define when do not have network and internet issues while running Sofit App.
    if(navigator.connection.type == 'none' || navigator.connection.type == 'unknown'){
       navigator.notification.alert(`'Your Internet connection is ' ${navigator.connection.type}`, () => {
         return;
