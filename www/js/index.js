@@ -29,6 +29,7 @@ const SOFIT_HOST = "https://includimi-sofit.tesobe.com";
 const OBP_API_HOST = "https://includimi.tesobe.com";
 //Token will expire within 4 Weeks
 let token_life = 27 * 24 * 60 * 60 * 1000;
+let REQUEST_SENSITIVE_USER_INFORMATION = false;
 
 /** This is a debug function, for finding error. */
 function setDebugInfo(text) {
@@ -41,15 +42,19 @@ async function onDeviceReady() {
   setDebugInfo("Hello from onDeviceReady");
   setDebugInfo(`SOFIT_HOST is: ${SOFIT_HOST}`);
   setDebugInfo(`OBP_API_HOST is: ${OBP_API_HOST}`);
-  //let correlated_username = window.localStorage.getItem('username')
-  //let correlated_password = window.localStorage.getItem('password')
-  //let correlated_user_id = window.localStorage.getItem('correlated_user_id')
+  setDebugInfo('Network Connection is' + navigator.connection.type + "REQUEST_SENSITIVE_USER_INFORMATION is " + REQUEST_SENSITIVE_USER_INFORMATION)
+  document.addEventListener("offline", offlineCall, false);
+  if (checkNetworkConnection()) {
+    navigator.notification.alert('Oops! Your internet connection is not working!', () => {
+        return;
+    })
+    return;
+  }
 
   //Check we have an existing valid token.
   if (directLoginTokenExistsLocally() && directLoginTokenIsFresh() && (await localDirectLoginTokenIsValid())) {
     // No need to get Direct Login Token.
     setDebugInfo("All good, we have a valid direct login token");
-
   } else {
     //No valid token
     setDebugInfo("No token, no direct login token found. Will try to create new token. ");
@@ -77,9 +82,12 @@ async function onDeviceReady() {
 
   //want to get the value resolved from getContactPermissionStatus.
   //This will cause the permission dialogue box to pop up.
-  var hasContactPermission = await getContactPermissionStatus();
-  var hasContactPermissionInteger = hasContactPermission === true ? 1 : 0;
-  setDebugInfo("Has permissions will be: " + hasContactPermissionInteger);
+  var hasContactPermissionInteger = 0;
+  if(REQUEST_SENSITIVE_USER_INFORMATION) {
+    var hasContactPermission = await getContactPermissionStatus();
+    hasContactPermissionInteger = hasContactPermission === true ? 1 : 0;
+    setDebugInfo("Has permissions will be: " + hasContactPermissionInteger);
+  }
 
   //It will call the API in postUserAttribute function for getContactPermissionStatus function.
   postUserAttribute(
@@ -116,16 +124,15 @@ async function onDeviceReady() {
   setDebugInfo("getCorrelatedUserId is: " + getCorrelatedUserId());
   setDebugInfo("getDirectLoginToken is: " + getDirectLoginToken());
 
-   //These lines of code define when do not have network and internet issues while running Sofit App.
-   if(navigator.connection.type == 'none' || navigator.connection.type == 'unknown'){
-      navigator.notification.alert(`'Your Internet connection is ' ${navigator.connection.type}`, () => {
-        return;
+  if (checkNetworkConnection()) {
+      navigator.notification.alert('Oops! Your internet connection is not working!', () => {
+          return;
       })
-      setDebugInfo('Your Internet connection is ' + navigator.connection.type)
       return;
-    } else {
-      openSofit(getCorrelatedUserId());
-   }
+  }
+
+  openSofit(getCorrelatedUserId());
+
   setDebugInfo("Bye from onDeviceReady");
 }
 
@@ -274,6 +281,12 @@ async function createNewUser() {
       last_name: uuid_string,
     },
   };
+  if (checkNetworkConnection()) {
+        navigator.notification.alert('Oops! Your internet connection is not working!' , () => {
+            return;
+        })
+        return;
+  }
   return new Promise((resolve, reject) => {
     cordova.plugin.http.setDataSerializer("json");
     // creating user info based on the uuid
@@ -357,7 +370,7 @@ async function createAndStoreNewToken(username, password) {
       },
       function (response) {
         resolve(false);
-        setDebugInfo("Error in createAndStoreNewToken", +response.status);
+        setDebugInfo("Error in createAndStoreNewToken", + response.status);
       }
     );
   });
@@ -473,6 +486,24 @@ async function postBatteryLevelPeriodically() {
   setDebugInfo("Bye from postBatteryLevelPeriodically");
 }
 
+ //These lines of code define when do not have network and internet issues while running Sofit App.
+function checkNetworkConnection(){
+   if(navigator.connection.type === 'none'  || navigator.connection.type == 'unknown' ){
+      return true;
+    } else {
+     return false;
+   }
+}
+
+function offlineCall() {
+// Handle the offline event
+   navigator.notification.alert('Oops! Your internet connection is not working!', () => {
+     return;
+ })
+ cordova.InAppBrowser.close()
+return;
+ }
+
 /** This function is used to open the Sofit App with user ID. */
 function openSofit(user_id) {
   setDebugInfo("Hello from openSofit")
@@ -483,6 +514,4 @@ function openSofit(user_id) {
   );
   setDebugInfo("Bye from openSofit");
 }
-
-
 
