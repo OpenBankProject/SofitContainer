@@ -86,7 +86,7 @@ async function onDeviceReady() {
   if(REQUEST_SENSITIVE_USER_INFORMATION) {
     var hasContactPermission = await getContactPermissionStatus();
     hasContactPermissionInteger = hasContactPermission === true ? 1 : 0;
-    setDebugInfo("Has permissions will be: " + hasContactPermissionInteger);
+    setDebugInfo("hasContactPermissionInteger is: " + hasContactPermissionInteger);
   }
 
   //It will call the API in postUserAttribute function for getContactPermissionStatus function.
