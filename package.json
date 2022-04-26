@@ -1,7 +1,7 @@
 {
   "name": "com.tesobe.sofitcontainer",
   "displayName": "SofitCOntainer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A sample Apache Cordova application that responds to the deviceready event.",
   "main": "index.js",
   "scripts": {
