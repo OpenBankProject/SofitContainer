@@ -243,16 +243,14 @@ function directLoginTokenExistsLocally() {
  * @param {[object]} json Set the http request type json. */
 async function createNewUser() {
   setDebugInfo("Hello from createNewUser");
-  // get unique id to create user : uuid
-  const uuid_string = device.uuid;
 
   //create a random username.
-  var createUserName = "";
+  var randomUserName = "";
   var userNameCharacter =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   var userNameCharacterLength = userNameCharacter.length;
   for (var i = 0; i < 12; i++) {
-      createUserName += userNameCharacter.charAt(
+      randomUserName += userNameCharacter.charAt(
         Math.floor(Math.random() * userNameCharacterLength)
       );
     }
@@ -267,18 +265,18 @@ async function createNewUser() {
       Math.floor(Math.random() * charactersLength)
     );
   }
-  setDebugInfo("Username: " + createUserName);
+  setDebugInfo("Username: " + randomUserName);
   setDebugInfo("password: " + randomLongStringPassword);
-  window.localStorage.setItem("correlated_username", createUserName);
+  window.localStorage.setItem("correlated_username", randomUserName);
   window.localStorage.setItem("correlated_password", randomLongStringPassword);
   const createUserOptions = {
     method: "post",
     data: {
-      email: uuid_string + "@example.com",
-      username: createUserName,
+      email: randomUserName + "@example.com",
+      username: randomUserName,
       password: randomLongStringPassword,
-      first_name: uuid_string,
-      last_name: uuid_string,
+      first_name: randomUserName,
+      last_name: randomUserName,
     },
   };
   if (checkNetworkConnection()) {
