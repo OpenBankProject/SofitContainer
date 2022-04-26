@@ -1,6 +1,6 @@
 {
   "name": "com.tesobe.includimi",
-  "displayName": "SofitContainer",
+  "displayName": "IncludiMi",
   "version": "1.1.0",
   "description": "A sample Apache Cordova application that responds to the deviceready event.",
   "main": "index.js",
